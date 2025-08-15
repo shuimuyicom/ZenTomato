@@ -434,38 +434,48 @@ struct MainView: View {
     private var zenTabBar: some View {
         HStack(spacing: 0) {
             ForEach(TabType.allCases, id: \.self) { tab in
-                Button(action: {
-                    withAnimation(.zenSmooth) {
-                        selectedTab = tab
-                    }
-                }) {
-                    VStack(spacing: 6) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 20))
-                            .foregroundColor(selectedTab == tab ? timerEngine.currentPhase.color : Color.zenSecondaryText)
-                        
-                        Text(tab.title)
-                            .font(.system(size: 10))
-                            .foregroundColor(selectedTab == tab ? Color.zenTextGray : Color.zenSecondaryText)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(
-                        ZStack {
-                            if selectedTab == tab {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.zenCardBackground.opacity(0.8))
-                                    .matchedGeometryEffect(id: "tab", in: tabAnimation)
-                            }
-                        }
-                    )
-                }
-                .buttonStyle(PlainButtonStyle())
+                zenTabButton(for: tab)
             }
         }
         .padding(4)
         .background(Color.zenCardBackground.opacity(0.6))
         .cornerRadius(16)
+    }
+
+    /// 单个标签按钮
+    private func zenTabButton(for tab: TabType) -> some View {
+        Button(action: {
+            withAnimation(.zenSmooth) {
+                selectedTab = tab
+            }
+        }) {
+            VStack(spacing: 6) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 20))
+                    .foregroundColor(selectedTab == tab ? timerEngine.currentPhase.color : Color.zenSecondaryText)
+
+                Text(tab.title)
+                    .font(.system(size: 10))
+                    .foregroundColor(selectedTab == tab ? Color.zenTextGray : Color.zenSecondaryText)
+            }
+            .frame(maxWidth: .infinity, minHeight: 50) // 增加最小高度，确保足够的点击区域
+            .padding(.vertical, 16) // 增加垂直内边距，从12增加到16
+            .padding(.horizontal, 8) // 添加水平内边距，增加左右点击区域
+            .contentShape(Rectangle()) // 确保整个区域都可以点击，包括透明部分
+            .background(tabButtonBackground(for: tab))
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+
+    /// 标签按钮背景
+    private func tabButtonBackground(for tab: TabType) -> some View {
+        ZStack {
+            if selectedTab == tab {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.zenCardBackground.opacity(0.8))
+                    .matchedGeometryEffect(id: "tab", in: tabAnimation)
+            }
+        }
     }
     
     // MARK: - Computed Properties
