@@ -177,30 +177,24 @@ class MenuBarManager: NSObject, ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self = self,
                   let button = self.statusItem?.button else { return }
-            
-            // 根据阶段设置图标
-            let iconName: String
-            let tintColor: NSColor
-            
-            switch self.timerEngine.currentPhase {
-            case .work:
-                iconName = "timer"
-                tintColor = NSColor(Color.zenRed)
-            case .shortBreak:
-                iconName = "cup.and.saucer"
-                tintColor = NSColor(Color.zenGreen)
-            case .longBreak:
-                iconName = "leaf"
-                tintColor = NSColor(Color.zenBlue)
-            }
-            
-            // 创建图标
-            if let image = NSImage(systemSymbolName: iconName, accessibilityDescription: nil) {
+
+            // 使用自定义番茄图标，始终显示为白色
+            if let image = NSImage(named: "BarIconIdle") {
+                // 设置为模板图像，这样会自动适应系统主题（在深色模式下显示白色，浅色模式下显示黑色）
                 image.isTemplate = true
                 button.image = image
-                button.contentTintColor = self.timerEngine.currentState == .running ? tintColor : NSColor.secondaryLabelColor
+
+                // 不设置 contentTintColor，让系统自动处理颜色
+                button.contentTintColor = nil
+            } else {
+                // 如果自定义图标加载失败，回退到系统图标
+                if let image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil) {
+                    image.isTemplate = true
+                    button.image = image
+                    button.contentTintColor = nil
+                }
             }
-            
+
             // 更新标题
             self.updateMenuBarDisplay()
         }
