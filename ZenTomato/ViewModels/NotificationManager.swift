@@ -39,11 +39,14 @@ class NotificationManager: NSObject, ObservableObject {
     private enum NotificationAction {
         static let skip = "zen.tomato.action.skip"
         static let startNow = "zen.tomato.action.start"
+        static let startWork = "zen.tomato.action.startWork"
+        static let extendBreak = "zen.tomato.action.extendBreak"
     }
     
     /// 通知类别标识符
     private enum NotificationCategory {
         static let timerAlert = "zen.tomato.category.timer"
+        static let breakEnd = "zen.tomato.category.breakEnd"
     }
     
     // MARK: - Initialization
@@ -107,7 +110,7 @@ class NotificationManager: NSObject, ObservableObject {
         content.title = "休息结束！"
         content.body = "休息结束，准备开始新的专注时光！"
         content.sound = .default
-        content.categoryIdentifier = NotificationCategory.timerAlert
+        content.categoryIdentifier = NotificationCategory.breakEnd
         content.userInfo = ["type": "breakEnd"]
 
         // 添加动作按钮
@@ -210,11 +213,33 @@ class NotificationManager: NSObject, ObservableObject {
             options: [.customDismissAction]
         )
 
+        // 创建休息结束专用动作
+        let startWorkAction = UNNotificationAction(
+            identifier: NotificationAction.startWork,
+            title: "开始工作",
+            options: [.foreground]
+        )
+
+        let extendBreakAction = UNNotificationAction(
+            identifier: NotificationAction.extendBreak,
+            title: "延长休息",
+            options: []
+        )
+
+        // 创建休息结束类别
+        let breakEndCategory = UNNotificationCategory(
+            identifier: NotificationCategory.breakEnd,
+            actions: [startWorkAction, extendBreakAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+
         // 注册所有类别
         notificationCenter.setNotificationCategories([
             shortBreakCategory,
             longBreakCategory,
-            generalBreakCategory
+            generalBreakCategory,
+            breakEndCategory
         ])
     }
     
@@ -274,7 +299,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                 object: nil,
                 userInfo: userInfo
             )
-            
+
         case NotificationAction.startNow:
             // 发送立即开始的通知
             NotificationCenter.default.post(
@@ -282,7 +307,23 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
                 object: nil,
                 userInfo: userInfo
             )
-            
+
+        case NotificationAction.startWork:
+            // 发送开始工作的通知
+            NotificationCenter.default.post(
+                name: .startWorkRequested,
+                object: nil,
+                userInfo: userInfo
+            )
+
+        case NotificationAction.extendBreak:
+            // 发送延长休息的通知
+            NotificationCenter.default.post(
+                name: .extendBreakRequested,
+                object: nil,
+                userInfo: userInfo
+            )
+
         case UNNotificationDefaultActionIdentifier:
             // 用户点击了通知本身
             NotificationCenter.default.post(
@@ -304,6 +345,7 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
 extension Notification.Name {
     static let skipBreakRequested = Notification.Name("ZenTomato.skipBreakRequested")
     static let startWorkRequested = Notification.Name("ZenTomato.startWorkRequested")
+    static let extendBreakRequested = Notification.Name("ZenTomato.extendBreakRequested")
     static let notificationTapped = Notification.Name("ZenTomato.notificationTapped")
 }
 

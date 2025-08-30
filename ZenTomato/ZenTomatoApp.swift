@@ -96,6 +96,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
+        // 监听通知响应 - 延长休息请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleExtendBreakRequested(_:)),
+            name: .extendBreakRequested,
+            object: nil
+        )
+
         // 监听通知响应 - 通知被点击
         NotificationCenter.default.addObserver(
             self,
@@ -177,6 +185,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // 用户选择立即开始工作
             timerEngine.currentPhase = .work
             timerEngine.start()
+
+        default:
+            break
+        }
+    }
+
+    /// 处理延长休息请求
+    @objc private func handleExtendBreakRequested(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let notificationType = userInfo["type"] as? String else { return }
+
+        switch notificationType {
+        case "breakEnd":
+            // 用户选择延长休息，可以添加延长休息的逻辑
+            // 目前暂时不做任何操作，保持当前休息状态
+            print("用户选择延长休息")
+            break
 
         default:
             break
