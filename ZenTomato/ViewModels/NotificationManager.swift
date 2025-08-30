@@ -73,17 +73,31 @@ class NotificationManager: NSObject, ObservableObject {
     }
     
     /// 发送休息开始通知
-    func sendBreakStartNotification(duration: TimeInterval) {
+    func sendBreakStartNotification(duration: TimeInterval, isLongBreak: Bool = false) {
         let content = UNMutableNotificationContent()
-        content.title = "休息时间到了！"
-        content.body = "休息 \(Int(duration / 60)) 分钟，让眼睛和身体放松一下"
+
+        // 计算分钟数
+        let minutes = Int(duration / 60)
+
+        // 根据休息类型显示相应文案，包含具体时间
+        if isLongBreak {
+            content.title = "长休息时间到了！"
+            content.body = "长休息 (\(minutes)分钟) - 好好休息一下吧"
+        } else {
+            content.title = "短休息时间到了！"
+            content.body = "短休息 (\(minutes)分钟) - 短暂休息一下吧"
+        }
+
         content.sound = .default
-        content.categoryIdentifier = NotificationCategory.timerAlert
-        content.userInfo = ["type": "breakStart", "duration": duration]
-        
+        // 根据休息类型设置不同的通知类别，以显示相应的按钮文案
+        content.categoryIdentifier = isLongBreak
+            ? "\(NotificationCategory.timerAlert).long"
+            : "\(NotificationCategory.timerAlert).short"
+        content.userInfo = ["type": "breakStart", "duration": duration, "isLongBreak": isLongBreak]
+
         // 添加动作按钮
         content.interruptionLevel = .timeSensitive
-        
+
         sendNotification(content: content, identifier: NotificationIdentifier.breakStart)
     }
     
@@ -91,14 +105,14 @@ class NotificationManager: NSObject, ObservableObject {
     func sendBreakEndNotification() {
         let content = UNMutableNotificationContent()
         content.title = "休息结束！"
-        content.body = "准备好继续专注工作了吗？"
+        content.body = "休息结束，准备开始新的专注时光！"
         content.sound = .default
         content.categoryIdentifier = NotificationCategory.timerAlert
         content.userInfo = ["type": "breakEnd"]
-        
+
         // 添加动作按钮
         content.interruptionLevel = .timeSensitive
-        
+
         sendNotification(content: content, identifier: NotificationIdentifier.breakEnd)
     }
     
@@ -145,30 +159,63 @@ class NotificationManager: NSObject, ObservableObject {
     
     /// 设置通知类别和动作
     private func setupNotificationCategories() {
-        // 创建跳过动作
-        let skipAction = UNNotificationAction(
+        // 创建通用休息开始通知的动作
+        let skipBreakAction = UNNotificationAction(
             identifier: NotificationAction.skip,
-            title: "跳过休息",
+            title: "继续工作",
             options: []
         )
-        
-        // 创建立即开始动作
-        let startAction = UNNotificationAction(
+
+        let startBreakAction = UNNotificationAction(
             identifier: NotificationAction.startNow,
-            title: "立即开始",
+            title: "开始休息",
             options: [.foreground]
         )
-        
-        // 创建计时器提醒类别
-        let timerCategory = UNNotificationCategory(
-            identifier: NotificationCategory.timerAlert,
-            actions: [startAction, skipAction],
+
+        // 创建短休息专用动作
+        let startShortBreakAction = UNNotificationAction(
+            identifier: NotificationAction.startNow,
+            title: "开始短休息",
+            options: [.foreground]
+        )
+
+        // 创建长休息专用动作
+        let startLongBreakAction = UNNotificationAction(
+            identifier: NotificationAction.startNow,
+            title: "开始长休息",
+            options: [.foreground]
+        )
+
+        // 创建短休息类别
+        let shortBreakCategory = UNNotificationCategory(
+            identifier: "\(NotificationCategory.timerAlert).short",
+            actions: [startShortBreakAction, skipBreakAction],
             intentIdentifiers: [],
             options: [.customDismissAction]
         )
-        
-        // 注册类别
-        notificationCenter.setNotificationCategories([timerCategory])
+
+        // 创建长休息类别
+        let longBreakCategory = UNNotificationCategory(
+            identifier: "\(NotificationCategory.timerAlert).long",
+            actions: [startLongBreakAction, skipBreakAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+
+        // 创建通用休息类别（兼容性保留）
+        let generalBreakCategory = UNNotificationCategory(
+            identifier: NotificationCategory.timerAlert,
+            actions: [startBreakAction, skipBreakAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+
+        // 注册所有类别
+        notificationCenter.setNotificationCategories([
+            shortBreakCategory,
+            longBreakCategory,
+            generalBreakCategory
+        ])
     }
     
     /// 发送通知

@@ -71,12 +71,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: .timerPhaseStarted,
             object: nil
         )
-        
+
         // 监听计时器阶段完成
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handlePhaseCompleted(_:)),
             name: .timerPhaseCompleted,
+            object: nil
+        )
+
+        // 监听通知响应 - 跳过休息请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSkipBreakRequested(_:)),
+            name: .skipBreakRequested,
+            object: nil
+        )
+
+        // 监听通知响应 - 立即开始请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleStartWorkRequested(_:)),
+            name: .startWorkRequested,
+            object: nil
+        )
+
+        // 监听通知响应 - 通知被点击
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleNotificationTapped(_:)),
+            name: .notificationTapped,
             object: nil
         )
     }
@@ -95,24 +119,75 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc private func handlePhaseCompleted(_ notification: Notification) {
         guard let phase = notification.userInfo?["phase"] as? TimerPhase else { return }
-        
+
         // 播放结束音效
         audioPlayer.playDingSound()
         audioPlayer.stopTickingSound()
-        
+
         // 发送通知
         switch phase {
         case .work:
-            let nextPhase = timerEngine.completedCycles % timerEngine.configuration.cyclesBeforeLongBreak == 0 
-                ? TimerPhase.longBreak 
-                : TimerPhase.shortBreak
+            // 注意：此时 completedCycles 还未增加，所以需要用 (completedCycles + 1) 来判断
+            let nextCycleCount = timerEngine.completedCycles + 1
+            let isLongBreak = nextCycleCount > 0 &&
+                             nextCycleCount % timerEngine.configuration.cyclesBeforeLongBreak == 0
             notificationManager.sendBreakStartNotification(
-                duration: nextPhase == .longBreak 
-                    ? timerEngine.configuration.longBreakDuration 
-                    : timerEngine.configuration.shortBreakDuration
+                duration: isLongBreak
+                    ? timerEngine.configuration.longBreakDuration
+                    : timerEngine.configuration.shortBreakDuration,
+                isLongBreak: isLongBreak
             )
         case .shortBreak, .longBreak:
             notificationManager.sendBreakEndNotification()
+        }
+    }
+
+    /// 处理跳过休息请求
+    @objc private func handleSkipBreakRequested(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let notificationType = userInfo["type"] as? String else { return }
+
+        switch notificationType {
+        case "breakStart":
+            // 用户选择跳过休息，直接开始下一个工作周期
+            timerEngine.currentPhase = .work
+            timerEngine.start()
+
+        case "breakEnd":
+            // 用户选择延长休息，暂时不做任何操作
+            // 可以在这里添加延长休息的逻辑
+            break
+
+        default:
+            break
+        }
+    }
+
+    /// 处理立即开始请求
+    @objc private func handleStartWorkRequested(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let notificationType = userInfo["type"] as? String else { return }
+
+        switch notificationType {
+        case "breakStart":
+            // 用户选择立即开始休息
+            timerEngine.start()
+
+        case "breakEnd":
+            // 用户选择立即开始工作
+            timerEngine.currentPhase = .work
+            timerEngine.start()
+
+        default:
+            break
+        }
+    }
+
+    /// 处理通知被点击
+    @objc private func handleNotificationTapped(_ notification: Notification) {
+        // 用户点击了通知本身，显示应用界面
+        DispatchQueue.main.async { [weak self] in
+            self?.menuBarManager?.showPopover()
         }
     }
 }

@@ -176,23 +176,7 @@ struct MainView: View {
                     .foregroundColor(timerEngine.currentPhase.color)
                     .monospacedDigit()
                 
-                // 进度条 - 简洁无动效
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // 背景
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.zenDivider.opacity(0.3))
-                            .frame(height: 3)
-                        
-                        // 进度
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(timerEngine.currentPhase.color)
-                            .frame(width: geometry.size.width * timerEngine.progress, height: 3)
-                    }
-                }
-                .frame(height: 3)
-                .padding(.horizontal, 40)
-                .padding(.top, 8)
+
                 
                 // 状态信息 - 更精简
                 HStack(spacing: 20) {
@@ -200,7 +184,7 @@ struct MainView: View {
                         Circle()
                             .fill(Color.zenGreen)
                             .frame(width: 5, height: 5)
-                        Text("\(timerEngine.completedCycles) 已完成")
+                        Text("已完成 \(timerEngine.completedCycles) 次专注")
                             .font(.system(size: 11))
                             .foregroundColor(Color.zenSecondaryText)
                     }

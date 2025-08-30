@@ -23,7 +23,7 @@ enum TimerPhase: String, CaseIterable {
         case .work:
             return "专注工作"
         case .shortBreak:
-            return "短暂休息"
+            return "短休息"
         case .longBreak:
             return "长休息"
         }
