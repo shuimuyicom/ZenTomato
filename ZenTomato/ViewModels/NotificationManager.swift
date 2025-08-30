@@ -59,11 +59,12 @@ class NotificationManager: NSObject, ObservableObject {
     
     /// 请求通知权限
     func requestPermission() {
+        // 请求通知权限，系统会根据用户设置决定显示样式（横幅或警告）
         notificationCenter.requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] granted, error in
             DispatchQueue.main.async {
                 self?.isAuthorized = granted
                 self?.checkAuthorizationStatus()
-                
+
                 if let error = error {
                     print("通知权限请求失败: \(error)")
                 }
