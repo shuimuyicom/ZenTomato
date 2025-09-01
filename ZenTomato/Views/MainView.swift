@@ -77,7 +77,6 @@ struct MainView: View {
                     // 计时器显示和控制
                     if selectedTab == .timer {
                         zenTimerSection
-                            .transition(.zenSlide)
                     }
                     
                     // 标签页内容
