@@ -379,7 +379,7 @@ struct MainView: View {
                         get: { !audioPlayer.settings.isMuted },
                         set: { audioPlayer.settings.isMuted = !$0 }
                     ))
-                    .toggleStyle(SwitchToggleStyle())
+                    .zenCompactStyle()
                     .labelsHidden()
                 }
                 
@@ -578,7 +578,7 @@ struct ZenToggleRow: View {
             Spacer()
             
             Toggle("", isOn: $isOn)
-                .toggleStyle(SwitchToggleStyle())
+                .zenCompactStyle()
                 .labelsHidden()
         }
         .padding(.vertical, 8)
@@ -601,7 +601,7 @@ struct ZenVolumeRow: View {
                 .foregroundColor(Color.zenTextGray)
             
             Slider(value: $volume, in: 0...2)
-                .controlSize(.small)
+                .zenCompactStyle()
             
             Text("\(Int(volume * 100))%")
                 .font(.system(size: 11))
