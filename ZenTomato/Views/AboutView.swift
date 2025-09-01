@@ -28,38 +28,43 @@ struct AboutView: View {
     
     var body: some View {
         VStack(spacing: 24) {
+            // 顶部间距，使内容整体下移
+            Spacer()
+                .frame(height: 20)
+
             // 顶部应用信息
             appInfoSection
-            
+
             // 协议链接区域
             protocolLinksSection
-            
+
             // 版权声明
             copyrightSection
-            
+
             Spacer()
         }
         .padding(32)
-        .frame(width: 450, height: 380)
+        .frame(width: 450, height: 420)
         .background(Color.zenGray.opacity(0.95))
         .cornerRadius(16)
     }
     
     // MARK: - Subviews
-    
-    /// 应用信息区域
-    private var appInfoSection: some View {
-        VStack(spacing: 16) {
-            // 应用图标 - 使用类似主页面左上角的样式
-            if let appIcon = NSImage(named: "AppIcon") {
+
+    /// 应用图标视图 - 使用改进的图标加载和显示方式
+    private var appIconView: some View {
+        Group {
+            // 尝试多种方式获取应用图标
+            if let appIcon = getAppIcon() {
                 Image(nsImage: appIcon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 80, height: 80)
+                    .background(Color.clear)
                     .clipShape(RoundedRectangle(cornerRadius: 80 * 0.2237, style: .continuous))
                     .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
             } else {
-                // 回退图标
+                // 最终回退图标
                 Image(systemName: "leaf.fill")
                     .font(.system(size: 48))
                     .foregroundColor(.white)
@@ -68,6 +73,40 @@ struct AboutView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 80 * 0.2237, style: .continuous))
                     .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
             }
+        }
+    }
+
+    /// 获取应用图标的辅助方法
+    private func getAppIcon() -> NSImage? {
+        // 方法1: 尝试从Bundle获取指定尺寸的图标
+        if let bundleIcon = NSImage(named: "AppIcon") {
+            // 确保图标尺寸正确
+            let targetSize = NSSize(width: 128, height: 128)
+            bundleIcon.size = targetSize
+            return bundleIcon
+        }
+
+        // 方法2: 尝试系统应用图标
+        if let systemIcon = NSApp.applicationIconImage {
+            // 调整系统图标尺寸
+            let targetSize = NSSize(width: 128, height: 128)
+            systemIcon.size = targetSize
+            return systemIcon
+        }
+
+        // 方法3: 尝试从Assets直接加载特定尺寸
+        if let iconImage = NSImage(named: NSImage.Name("icon_128x128")) {
+            return iconImage
+        }
+
+        return nil
+    }
+
+    /// 应用信息区域
+    private var appInfoSection: some View {
+        VStack(spacing: 16) {
+            // 应用图标 - 使用系统级别的应用图标确保完整显示
+            appIconView
             
             // 应用名称
             Text(appName)
@@ -137,11 +176,11 @@ struct AboutView: View {
     /// 版权声明区域
     private var copyrightSection: some View {
         VStack(spacing: 8) {
-            Text("©️水木易")
+            Text("Copyright © 2025 水木易. All rights reserved. ")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color.zenSecondaryText)
             
-            Text("专注于禅意番茄工作法")
+            Text("禅意番茄工作法")
                 .font(.system(size: 12))
                 .foregroundColor(Color.zenSecondaryText.opacity(0.8))
         }
@@ -158,7 +197,7 @@ struct AboutView: View {
     
     /// 打开隐私协议
     private func openPrivacyPolicy() {
-        if let url = URL(string: "https://bow-gravity-e8b.notion.site/zentomato-privacy-policy") {
+        if let url = URL(string: "https://shuimuyi.notion.site/zentomato-privacy-policy?source=copy_link") {
             NSWorkspace.shared.open(url)
         }
     }

@@ -71,8 +71,8 @@ class AboutWindowManager: NSObject, ObservableObject {
         // 创建窗口内容视图控制器
         let hostingController = NSHostingController(rootView: aboutView)
 
-        // 计算合适的窗口尺寸 - 确保内容完整显示
-        let windowSize = NSSize(width: 450, height: 380)
+        // 计算合适的窗口尺寸 - 增加高度确保图标完整显示
+        let windowSize = NSSize(width: 450, height: 420)
 
         // 创建窗口 - 确保包含正确的样式掩码
         aboutWindow = NSWindow(
