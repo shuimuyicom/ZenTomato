@@ -106,36 +106,21 @@ struct MainView: View {
         HStack {
             // Logo和标题
             HStack(spacing: 12) {
-                // 应用主图标 - macOS 标准圆角矩形样式
-                ZStack {
-                    // 背景圆角矩形渐变 - 符合 macOS 应用图标规范
-                    RoundedRectangle(cornerRadius: 40 * 0.2237, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    timerEngine.currentPhase.color.opacity(0.8),
-                                    timerEngine.currentPhase.color
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                // 应用主图标 - macOS 标准圆角矩形样式，简洁无阴影
+                if let appIcon = NSImage(named: "AppIcon") {
+                    Image(nsImage: appIcon)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
                         .frame(width: 40, height: 40)
-
-                    // 应用主图标，使用 macOS 标准圆角，调整尺寸确保完整显示
-                    if let appIcon = NSImage(named: "AppIcon") {
-                        Image(nsImage: appIcon)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 36, height: 36)
-                            .clipShape(RoundedRectangle(cornerRadius: 36 * 0.2237, style: .continuous))
-                            .shadow(color: Color.black.opacity(0.15), radius: 1.5, x: 0, y: 0.5)
-                    } else {
-                        // 回退到系统图标
-                        Image(systemName: "leaf.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.white)
-                    }
+                        .clipShape(RoundedRectangle(cornerRadius: 40 * 0.2237, style: .continuous))
+                } else {
+                    // 回退到系统图标
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Color.zenGreen)
+                        .clipShape(RoundedRectangle(cornerRadius: 40 * 0.2237, style: .continuous))
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
