@@ -292,7 +292,10 @@ struct MainView: View {
                     
                     TimeSettingRow(
                         title: "工作周期",
-                        value: $timerEngine.configuration.cyclesBeforeLongBreak,
+                        value: Binding(
+                            get: { timerEngine.configuration.cyclesBeforeLongBreak },
+                            set: { timerEngine.configuration.cyclesBeforeLongBreak = $0 }
+                        ),
                         unit: "个",
                         color: .zenGold
                     )
@@ -553,6 +556,7 @@ struct TimeSettingRow: View {
                 Text(unit)
                     .font(.system(size: 11))
                     .foregroundColor(Color.zenSecondaryText)
+                    .frame(width: 30, alignment: .leading)
             }
         }
         .padding(.vertical, 8)
