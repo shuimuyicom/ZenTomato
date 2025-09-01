@@ -109,7 +109,7 @@ struct MainView: View {
                 // 应用主图标 - macOS 标准圆角矩形样式
                 ZStack {
                     // 背景圆角矩形渐变 - 符合 macOS 应用图标规范
-                    RoundedRectangle(cornerRadius: 36 * 0.2237, style: .continuous)
+                    RoundedRectangle(cornerRadius: 40 * 0.2237, style: .continuous)
                         .fill(
                             LinearGradient(
                                 colors: [
@@ -120,20 +120,20 @@ struct MainView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 36, height: 36)
+                        .frame(width: 40, height: 40)
 
-                    // 应用主图标，使用 macOS 标准圆角
+                    // 应用主图标，使用 macOS 标准圆角，调整尺寸确保完整显示
                     if let appIcon = NSImage(named: "AppIcon") {
                         Image(nsImage: appIcon)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 28, height: 28)
-                            .clipShape(RoundedRectangle(cornerRadius: 28 * 0.2237, style: .continuous))
+                            .frame(width: 36, height: 36)
+                            .clipShape(RoundedRectangle(cornerRadius: 36 * 0.2237, style: .continuous))
                             .shadow(color: Color.black.opacity(0.15), radius: 1.5, x: 0, y: 0.5)
                     } else {
                         // 回退到系统图标
                         Image(systemName: "leaf.fill")
-                            .font(.system(size: 18))
+                            .font(.system(size: 20))
                             .foregroundColor(.white)
                     }
                 }
@@ -516,7 +516,11 @@ struct MainView: View {
     
     /// 显示关于窗口
     private func showAbout() {
-        NSApp.orderFrontStandardAboutPanel(nil)
+        // 先关闭主界面 popover
+        menuBarManager.hidePopover()
+
+        // 然后显示关于窗口
+        AboutWindowManager.shared.showAboutWindow()
     }
     
     /// 退出应用

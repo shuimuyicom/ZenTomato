@@ -88,8 +88,43 @@ class MenuBarManager: NSObject, ObservableObject {
     /// 显示弹出面板
     func showPopover() {
         guard let button = statusItem?.button else { return }
-        
+
+        // 调整 popover 显示位置，使其更好地适应大尺寸内容
+        // 使用 .minY 确保 popover 在菜单栏按钮下方显示
         popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+        // 如果需要，可以通过调整 popover 的位置来优化显示效果
+        if let popoverWindow = popover?.contentViewController?.view.window {
+            // 获取屏幕尺寸
+            if let screen = NSScreen.main {
+                let screenFrame = screen.visibleFrame
+                let popoverFrame = popoverWindow.frame
+
+                // 确保 popover 不会超出屏幕边界
+                var newOrigin = popoverFrame.origin
+
+                // 检查右边界
+                if popoverFrame.maxX > screenFrame.maxX {
+                    newOrigin.x = screenFrame.maxX - popoverFrame.width - 10
+                }
+
+                // 检查左边界
+                if popoverFrame.minX < screenFrame.minX {
+                    newOrigin.x = screenFrame.minX + 10
+                }
+
+                // 检查下边界
+                if popoverFrame.minY < screenFrame.minY {
+                    newOrigin.y = screenFrame.minY + 10
+                }
+
+                // 应用新位置
+                if newOrigin != popoverFrame.origin {
+                    popoverWindow.setFrameOrigin(newOrigin)
+                }
+            }
+        }
+
         isPopoverShown = true
         eventMonitor?.start()
     }
@@ -122,7 +157,9 @@ class MenuBarManager: NSObject, ObservableObject {
     /// 设置弹出窗口
     private func setupPopover() {
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 300, height: 400)
+        // 调整弹出窗口尺寸以匹配 MainView 的实际内容尺寸 (380x680)
+        // 确保应用图标和所有内容都能完整显示
+        popover?.contentSize = NSSize(width: 380, height: 680)
         popover?.behavior = .transient
         popover?.animates = true
         
