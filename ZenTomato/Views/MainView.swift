@@ -106,9 +106,10 @@ struct MainView: View {
         HStack {
             // Logo和标题
             HStack(spacing: 12) {
-                // 禅意图标
+                // 应用主图标 - macOS 标准圆角矩形样式
                 ZStack {
-                    Circle()
+                    // 背景圆角矩形渐变 - 符合 macOS 应用图标规范
+                    RoundedRectangle(cornerRadius: 36 * 0.2237, style: .continuous)
                         .fill(
                             LinearGradient(
                                 colors: [
@@ -120,10 +121,21 @@ struct MainView: View {
                             )
                         )
                         .frame(width: 36, height: 36)
-                    
-                    Image(systemName: "leaf.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.white)
+
+                    // 应用主图标，使用 macOS 标准圆角
+                    if let appIcon = NSImage(named: "AppIcon") {
+                        Image(nsImage: appIcon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 28, height: 28)
+                            .clipShape(RoundedRectangle(cornerRadius: 28 * 0.2237, style: .continuous))
+                            .shadow(color: Color.black.opacity(0.15), radius: 1.5, x: 0, y: 0.5)
+                    } else {
+                        // 回退到系统图标
+                        Image(systemName: "leaf.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white)
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
