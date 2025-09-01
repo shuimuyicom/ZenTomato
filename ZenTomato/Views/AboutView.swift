@@ -35,11 +35,11 @@ struct AboutView: View {
             // 顶部应用信息
             appInfoSection
 
-            // 协议链接区域
-            protocolLinksSection
-
             // 版权声明
             copyrightSection
+
+            // 协议链接区域 - 移至底部，改为小按钮样式
+            protocolLinksSection
 
             Spacer()
         }
@@ -120,57 +120,52 @@ struct AboutView: View {
         }
     }
     
-    /// 协议链接区域
+    /// 协议链接区域 - 更小的按钮样式
     private var protocolLinksSection: some View {
-        VStack(spacing: 12) {
-            // 服务协议链接
+        HStack(spacing: 12) {
+            // 服务协议小按钮
             Button(action: openTermsOfService) {
-                HStack {
+                HStack(spacing: 4) {
                     Image(systemName: "doc.text")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.zenBlue)
-                    
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
+
                     Text("服务协议")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.zenBlue)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color.zenSecondaryText)
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color.zenCardBackground.opacity(0.8))
-                .cornerRadius(8)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.zenCardBackground.opacity(0.5))
+                .cornerRadius(4)
             }
             .buttonStyle(PlainButtonStyle())
-            
-            // 隐私协议链接
+            .onHover { isHovered in
+                // 悬停效果可以在这里添加
+            }
+
+            // 隐私协议小按钮
             Button(action: openPrivacyPolicy) {
-                HStack {
+                HStack(spacing: 4) {
                     Image(systemName: "hand.raised")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.zenBlue)
-                    
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
+
                     Text("隐私协议")
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.zenBlue)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 12))
-                        .foregroundColor(Color.zenSecondaryText)
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color.zenCardBackground.opacity(0.8))
-                .cornerRadius(8)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.zenCardBackground.opacity(0.5))
+                .cornerRadius(4)
             }
             .buttonStyle(PlainButtonStyle())
+            .onHover { isHovered in
+                // 悬停效果可以在这里添加
+            }
         }
+        .padding(.top, 12) // 增加顶部间距，让按钮位置更靠下
     }
     
     /// 版权声明区域
