@@ -115,15 +115,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: .notificationTapped,
             object: nil
         )
+
+        // 监听计时器暂停
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTimerPaused(_:)),
+            name: .timerPaused,
+            object: nil
+        )
+
+        // 监听计时器停止
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTimerStopped(_:)),
+            name: .timerStopped,
+            object: nil
+        )
     }
     
     @objc private func handlePhaseStarted(_ notification: Notification) {
         guard let phase = notification.userInfo?["phase"] as? TimerPhase else { return }
-        
-        // 播放开始音效
+
+        // 播放开始音效和禅韵木鱼
         if phase == .work {
             audioPlayer.playWindupSound()
-            audioPlayer.startTickingSound()
+            // 如果是从暂停恢复，则恢复禅韵木鱼；否则开始播放
+            if audioPlayer.isTickingPaused {
+                audioPlayer.resumeTickingSound()
+            } else {
+                audioPlayer.startTickingSound()
+            }
         } else {
             audioPlayer.stopTickingSound()
         }
@@ -218,6 +239,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.menuBarManager?.showPopover()
         }
+    }
+
+    /// 处理计时器暂停
+    @objc private func handleTimerPaused(_ notification: Notification) {
+        // 如果当前是工作阶段且正在播放禅韵木鱼，则暂停播放
+        if timerEngine.currentPhase == .work && audioPlayer.isTickingPlaying {
+            audioPlayer.pauseTickingSound()
+        }
+    }
+
+    /// 处理计时器停止
+    @objc private func handleTimerStopped(_ notification: Notification) {
+        // 停止所有音效播放
+        audioPlayer.stopTickingSound()
     }
 }
 

@@ -408,10 +408,10 @@ struct MainView: View {
             .background(Color.zenCardBackground.opacity(0.95))
             .cornerRadius(16)
 
-            // 白噪音设置卡片
+            // 禅韵木鱼设置卡片
             VStack(spacing: 12) {
                 HStack {
-                    Label("白噪音设置", systemImage: "waveform")
+                    Label("禅韵木鱼", systemImage: "waveform")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(Color.zenTextGray)
                     Spacer()
@@ -424,8 +424,8 @@ struct MainView: View {
                 if audioPlayer.settings.enableTicking && !audioPlayer.settings.isMuted {
                     VStack(spacing: 12) {
                         ZenVolumeRow(
-                            icon: "metronome",
-                            title: "滴答声",
+                            icon: "bell.fill",
+                            title: "禅韵木鱼",
                             volume: $audioPlayer.settings.tickingVolume
                         )
                     }

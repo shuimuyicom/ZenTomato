@@ -23,8 +23,11 @@ class AudioPlayer: ObservableObject {
         }
     }
     
-    /// 是否正在播放滴答声
+    /// 是否正在播放禅韵木鱼
     @Published var isTickingPlaying: Bool = false
+
+    /// 是否暂停播放禅韵木鱼（用于工作阶段暂停时）
+    @Published var isTickingPaused: Bool = false
     
     // MARK: - Private Properties
     
@@ -61,30 +64,57 @@ class AudioPlayer: ObservableObject {
         playSound(.ding)
     }
     
-    /// 开始播放滴答声
+    /// 开始播放禅韵木鱼
     func startTickingSound() {
         guard settings.enableTicking, !settings.isMuted else { return }
-        
+
         if let player = players[.ticking] {
             player.numberOfLoops = -1 // 无限循环
             player.volume = 0
             player.play()
-            
+
             // 淡入效果
             fadeIn(player: player, to: settings.getEffectiveVolume(for: .ticking))
             isTickingPlaying = true
+            isTickingPaused = false
         }
     }
     
-    /// 停止播放滴答声
+    /// 停止播放禅韵木鱼
     func stopTickingSound() {
         guard let player = players[.ticking], player.isPlaying else { return }
-        
+
         // 淡出效果
         fadeOut(player: player) { [weak self] in
             player.stop()
             player.currentTime = 0
             self?.isTickingPlaying = false
+            self?.isTickingPaused = false
+        }
+    }
+
+    /// 暂停播放禅韵木鱼（工作阶段暂停时调用）
+    func pauseTickingSound() {
+        guard let player = players[.ticking], player.isPlaying, isTickingPlaying else { return }
+
+        // 淡出效果后暂停
+        fadeOut(player: player) { [weak self] in
+            player.pause()
+            self?.isTickingPaused = true
+        }
+    }
+
+    /// 恢复播放禅韵木鱼（工作阶段恢复时调用）
+    func resumeTickingSound() {
+        guard settings.enableTicking, !settings.isMuted, isTickingPaused else { return }
+
+        if let player = players[.ticking] {
+            player.volume = 0
+            player.play()
+
+            // 淡入效果
+            fadeIn(player: player, to: settings.getEffectiveVolume(for: .ticking))
+            isTickingPaused = false
         }
     }
     
@@ -95,6 +125,7 @@ class AudioPlayer: ObservableObject {
             player.currentTime = 0
         }
         isTickingPlaying = false
+        isTickingPaused = false
         fadeTimer?.invalidate()
     }
     

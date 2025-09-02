@@ -11,3 +11,4 @@
 - 开机自启动功能实现完成：已创建SystemSettings模型和LaunchAtLoginManager管理器，使用现代SMAppService API（向下兼容旧API），在MainView设置页面添加"系统集成"卡片包含开机启动开关，更新entitlements添加必要权限，应用编译成功
 - 菜单栏时钟抖动问题修复完成：在MenuBarManager.swift中使用NSFont.monospacedDigitSystemFont()创建等宽数字字体，通过NSAttributedString设置菜单栏时间显示，消除字符宽度变化导致的视觉抖动。移除了冲突的button.title设置，确保时间正常显示。应用已编译成功。
 - 音效标签页白噪音设置重构完成：已将滴答声设置从音效设置卡片中分离，创建独立的白噪音设置卡片，保持所有原有功能和数据绑定，使用waveform图标，应用编译成功
+- 禅韵木鱼暂停恢复功能实现完成：已将滴答声重命名为"禅韵木鱼"，添加了工作阶段暂停时暂停禅韵木鱼、恢复时继续播放的功能。修改了AudioPlayer.swift（添加暂停/恢复方法）、ZenTomatoApp.swift（添加暂停/恢复通知处理）、MainView.swift（更新UI显示）、AudioSettings.swift（更新注释和显示名称）。应用编译成功。

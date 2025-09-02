@@ -14,11 +14,11 @@ struct AudioSettings: Codable {
     var windupVolume: Float = 1.0
     /// 结束音效音量 (0.0 - 2.0)
     var dingVolume: Float = 1.0
-    /// 背景滴答声音量 (0.0 - 2.0)
+    /// 禅韵木鱼音量 (0.0 - 2.0)
     var tickingVolume: Float = 0.5
     /// 是否静音
     var isMuted: Bool = false
-    /// 是否启用滴答声
+    /// 是否启用禅韵木鱼
     var enableTicking: Bool = true
     
     /// 默认设置
@@ -66,7 +66,7 @@ enum SoundType: String, CaseIterable {
         case .ding:
             return "结束音效"
         case .ticking:
-            return "背景滴答声"
+            return "禅韵木鱼"
         }
     }
     
