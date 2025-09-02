@@ -14,3 +14,4 @@
 - 禅韵木鱼暂停恢复功能实现完成：已将滴答声重命名为"禅韵木鱼"，添加了工作阶段暂停时暂停禅韵木鱼、恢复时继续播放的功能。修改了AudioPlayer.swift（添加暂停/恢复方法）、ZenTomatoApp.swift（添加暂停/恢复通知处理）、MainView.swift（更新UI显示）、AudioSettings.swift（更新注释和显示名称）。应用编译成功。
 - 音频文件重命名更新完成：已将ticking.mp3重命名为zenresonance.mp3，并更新了AudioSettings.swift中的fileName属性和README.md中的项目结构说明，应用编译成功
 - 禅韵木鱼音频问题修复完成：发现AudioPlayer使用soundType.rawValue查找文件，但ticking的rawValue仍为"ticking"而文件已重命名为zenresonance.mp3，已将SoundType.ticking的rawValue更新为"zenresonance"，应用编译成功
+- App Store审核前检查完成：ZenTomato应用总体合规性良好，可立即提交审核。发现2个中等风险代码问题（MenuBarManager.swift中的强制解包），已提供具体修复方案。应用完全本地化、无数据收集、权限使用合理，符合App Store审核要求。生成了详细的审核报告文档。
