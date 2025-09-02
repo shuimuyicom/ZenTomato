@@ -44,7 +44,10 @@ class MenuBarManager: NSObject, ObservableObject {
     
     /// 通知管理器
     private let notificationManager: NotificationManager
-    
+
+    /// 开机启动管理器
+    private let launchAtLoginManager: LaunchAtLoginManager
+
     /// 取消令牌集合
     private var cancellables = Set<AnyCancellable>()
     
@@ -53,12 +56,13 @@ class MenuBarManager: NSObject, ObservableObject {
     
     // MARK: - Initialization
     
-    init(timerEngine: TimerEngine, audioPlayer: AudioPlayer, notificationManager: NotificationManager) {
+    init(timerEngine: TimerEngine, audioPlayer: AudioPlayer, notificationManager: NotificationManager, launchAtLoginManager: LaunchAtLoginManager) {
         self.timerEngine = timerEngine
         self.audioPlayer = audioPlayer
         self.notificationManager = notificationManager
+        self.launchAtLoginManager = launchAtLoginManager
         super.init()
-        
+
         setupBindings()
         setupEventMonitor()
     }
@@ -168,7 +172,8 @@ class MenuBarManager: NSObject, ObservableObject {
             timerEngine: timerEngine,
             audioPlayer: audioPlayer,
             notificationManager: notificationManager,
-            menuBarManager: self
+            menuBarManager: self,
+            launchAtLoginManager: launchAtLoginManager
         )
         
         // 设置弹出窗口内容
@@ -242,13 +247,20 @@ class MenuBarManager: NSObject, ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self = self,
                   let button = self.statusItem?.button else { return }
-            
+
             if self.showTimeInMenuBar && self.timerEngine.currentState == .running {
-                // 显示时间
-                button.title = " " + self.timerEngine.formattedTimeRemaining
+                // 显示时间 - 使用等宽字体防止抖动
+                let timeText = self.timerEngine.formattedTimeRemaining
+
+                // 创建带有等宽数字字体的属性字符串
+                let attributes: [NSAttributedString.Key: Any] = [
+                    .font: NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+                ]
+                let attributedString = NSAttributedString(string: " " + timeText, attributes: attributes)
+                button.attributedTitle = attributedString
             } else {
-                // 只显示图标
-                button.title = ""
+                // 只显示图标，清空时间显示
+                button.attributedTitle = NSAttributedString(string: "")
             }
         }
     }

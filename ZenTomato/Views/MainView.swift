@@ -40,18 +40,21 @@ enum TabType: String, CaseIterable {
 /// 主视图
 struct MainView: View {
     // MARK: - Properties
-    
+
     /// 计时引擎
     @ObservedObject var timerEngine: TimerEngine
-    
+
     /// 音频播放器
     @ObservedObject var audioPlayer: AudioPlayer
-    
+
     /// 通知管理器
     @ObservedObject var notificationManager: NotificationManager
-    
+
     /// 菜单栏管理器
     @ObservedObject var menuBarManager: MenuBarManager
+
+    /// 开机启动管理器
+    @ObservedObject var launchAtLoginManager: LaunchAtLoginManager
     
     /// 当前选中的标签页
     @State private var selectedTab: TabType = .timer
@@ -356,7 +359,7 @@ struct MainView: View {
                     ZenToggleRow(
                         icon: "power",
                         title: "开机自启动",
-                        isOn: .constant(false)
+                        isOn: $launchAtLoginManager.settings.launchAtLogin
                     )
                 }
             }
@@ -629,8 +632,10 @@ struct MainView_Previews: PreviewProvider {
             menuBarManager: MenuBarManager(
                 timerEngine: TimerEngine.preview,
                 audioPlayer: AudioPlayer.preview,
-                notificationManager: NotificationManager.preview
-            )
+                notificationManager: NotificationManager.preview,
+                launchAtLoginManager: LaunchAtLoginManager()
+            ),
+            launchAtLoginManager: LaunchAtLoginManager()
         )
     }
 }

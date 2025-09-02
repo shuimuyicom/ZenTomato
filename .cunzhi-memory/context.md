@@ -8,3 +8,5 @@
 - 关于页面重新设计完成：已创建自定义AboutView和AboutWindowManager，添加协议链接（服务协议、隐私协议）、版权声明"©️水木易"、优化应用图标展示（macOS圆角样式）、修复弹窗重复显示逻辑。应用编译运行成功，通过12项自动化测试，生成完整报告文档。
 - 计时器动画移除完成：已从MainView.swift第80行移除计时器显示区域的.transition(.zenSlide)动画效果，现在计时器在标签页切换时保持静态显示，不再有滑动过渡动画。保留了标签按钮的背景动画和切换动画以维持良好的用户体验。
 - 协议链接UI优化完成：已将AboutView.swift中的隐私协议和服务协议链接改为小按钮样式并移至页面底部，按钮尺寸进一步缩小（10pt字体，8x4内边距，4pt圆角），位置更靠下，视觉效果更低调，应用编译成功
+- 开机自启动功能实现完成：已创建SystemSettings模型和LaunchAtLoginManager管理器，使用现代SMAppService API（向下兼容旧API），在MainView设置页面添加"系统集成"卡片包含开机启动开关，更新entitlements添加必要权限，应用编译成功
+- 菜单栏时钟抖动问题修复完成：在MenuBarManager.swift中使用NSFont.monospacedDigitSystemFont()创建等宽数字字体，通过NSAttributedString设置菜单栏时间显示，消除字符宽度变化导致的视觉抖动。移除了冲突的button.title设置，确保时间正常显示。应用已编译成功。

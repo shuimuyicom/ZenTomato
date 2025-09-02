@@ -36,7 +36,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     /// 通知管理器
     let notificationManager = NotificationManager()
-    
+
+    /// 开机启动管理器
+    let launchAtLoginManager = LaunchAtLoginManager()
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 隐藏主窗口和 Dock 图标
         NSApp.setActivationPolicy(.accessory)
@@ -45,7 +48,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarManager = MenuBarManager(
             timerEngine: timerEngine,
             audioPlayer: audioPlayer,
-            notificationManager: notificationManager
+            notificationManager: notificationManager,
+            launchAtLoginManager: launchAtLoginManager
         )
         menuBarManager?.setupMenuBar()
         
