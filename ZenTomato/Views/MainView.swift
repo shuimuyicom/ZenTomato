@@ -644,9 +644,9 @@ struct ZenVolumeRow: View {
                 .font(.system(size: 12))
                 .foregroundColor(Color.zenTextGray)
             
-            Slider(value: $volume, in: 0...2)
+            Slider(value: $volume, in: 0...1)
                 .zenCompactStyle()
-            
+
             Text("\(Int(volume * 100))%")
                 .font(.system(size: 11))
                 .foregroundColor(Color.zenSecondaryText)

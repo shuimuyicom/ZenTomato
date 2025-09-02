@@ -12,7 +12,7 @@ import Foundation
 struct WhiteNoiseSetting: Codable {
     /// 是否启用
     var isEnabled: Bool
-    /// 音量 (0.0 - 2.0)
+    /// 音量 (0.0 - 1.0)
     var volume: Float
 
     /// 默认设置
@@ -23,11 +23,11 @@ struct WhiteNoiseSetting: Codable {
 
 /// 音频设置
 struct AudioSettings: Codable {
-    /// 开始音效音量 (0.0 - 2.0)
+    /// 开始音效音量 (0.0 - 1.0)
     var windupVolume: Float = 1.0
-    /// 结束音效音量 (0.0 - 2.0)
+    /// 结束音效音量 (0.0 - 1.0)
     var dingVolume: Float = 1.0
-    /// 禅韵木鱼音量 (0.0 - 2.0)
+    /// 禅韵木鱼音量 (0.0 - 1.0)
     var tickingVolume: Float = 0.5
     /// 是否静音
     var isMuted: Bool = false
@@ -47,7 +47,7 @@ struct AudioSettings: Codable {
     
     /// 验证音量值是否有效
     func isVolumeValid(_ volume: Float) -> Bool {
-        return volume >= 0.0 && volume <= 2.0
+        return volume >= 0.0 && volume <= 1.0
     }
     
     /// 验证所有设置是否有效

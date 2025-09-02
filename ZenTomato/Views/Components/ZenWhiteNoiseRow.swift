@@ -15,24 +15,13 @@ struct ZenWhiteNoiseRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // 启用开关
-            Toggle("", isOn: $setting.isEnabled)
-                .zenCompactStyle()
-                .labelsHidden()
-            
-            // 图标
-            Image(systemName: whiteNoiseType.icon)
-                .font(.system(size: 14))
-                .foregroundColor(setting.isEnabled ? Color.zenAccent : Color.zenTextGray)
-                .frame(width: 20)
-            
             // 标题
             Text(whiteNoiseType.displayName)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(setting.isEnabled ? Color.zenTextGray : Color.zenSecondaryText)
-            
+
             Spacer()
-            
+
             // 音量控制（仅在启用时显示）
             if setting.isEnabled {
                 HStack(spacing: 8) {
@@ -40,20 +29,20 @@ struct ZenWhiteNoiseRow: View {
                     Image(systemName: "speaker.wave.1")
                         .font(.system(size: 11))
                         .foregroundColor(Color.zenTextGray)
-                    
+
                     // 音量滑块
                     Slider(
                         value: Binding(
                             get: { setting.volume },
                             set: { newValue in
-                                setting.volume = max(0.0, min(2.0, newValue))
+                                setting.volume = max(0.0, min(1.0, newValue))
                             }
                         ),
-                        in: 0.0...2.0
+                        in: 0.0...1.0
                     )
                     .zenCompactStyle()
                     .frame(width: 80)
-                    
+
                     // 音量数值
                     Text("\(Int(setting.volume * 100))%")
                         .font(.system(size: 10, weight: .medium))
@@ -61,6 +50,11 @@ struct ZenWhiteNoiseRow: View {
                         .frame(width: 30, alignment: .trailing)
                 }
             }
+
+            // 启用开关
+            Toggle("", isOn: $setting.isEnabled)
+                .zenCompactStyle()
+                .labelsHidden()
         }
         .padding(.vertical, 4)
         .animation(.zenQuick, value: setting.isEnabled)
