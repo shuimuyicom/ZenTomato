@@ -416,18 +416,35 @@ struct MainView: View {
                         .foregroundColor(Color.zenTextGray)
                     Spacer()
 
-                    Toggle("", isOn: $audioPlayer.settings.enableTicking)
-                        .zenCompactStyle()
-                        .labelsHidden()
+                    // 显示是否有启用的白噪音
+                    Toggle("", isOn: Binding(
+                        get: { !audioPlayer.settings.enabledWhiteNoiseTypes.isEmpty },
+                        set: { enabled in
+                            // 如果关闭，禁用所有白噪音；如果开启，启用默认的禅韵木鱼
+                            if enabled {
+                                audioPlayer.settings.whiteNoiseSettings[.zenResonance]?.isEnabled = true
+                            } else {
+                                for type in WhiteNoiseType.allCases {
+                                    audioPlayer.settings.whiteNoiseSettings[type]?.isEnabled = false
+                                }
+                            }
+                        }
+                    ))
+                    .zenCompactStyle()
+                    .labelsHidden()
                 }
 
-                if audioPlayer.settings.enableTicking && !audioPlayer.settings.isMuted {
+                if !audioPlayer.settings.enabledWhiteNoiseTypes.isEmpty && !audioPlayer.settings.isMuted {
                     VStack(spacing: 12) {
-                        ZenVolumeRow(
-                            icon: "bell.fill",
-                            title: "禅韵木鱼",
-                            volume: $audioPlayer.settings.tickingVolume
-                        )
+                        ForEach(WhiteNoiseType.allCases, id: \.self) { whiteNoiseType in
+                            ZenWhiteNoiseRow(
+                                whiteNoiseType: whiteNoiseType,
+                                setting: Binding(
+                                    get: { audioPlayer.settings.whiteNoiseSettings[whiteNoiseType] ?? WhiteNoiseSetting.default },
+                                    set: { audioPlayer.settings.whiteNoiseSettings[whiteNoiseType] = $0 }
+                                )
+                            )
+                        }
                     }
                 }
             }

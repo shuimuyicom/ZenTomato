@@ -30,10 +30,13 @@ class AudioPlayer: ObservableObject {
     @Published var isTickingPaused: Bool = false
     
     // MARK: - Private Properties
-    
+
     /// 音频播放器字典
     private var players: [SoundType: AVAudioPlayer] = [:]
-    
+
+    /// 白噪音播放器字典
+    private var whiteNoisePlayers: [WhiteNoiseType: AVAudioPlayer] = [:]
+
     /// 音频引擎（用于高级音频控制）
     private var audioEngine: AVAudioEngine?
     
@@ -49,6 +52,7 @@ class AudioPlayer: ObservableObject {
         self.settings = AudioSettings.load()
         setupAudioSession()
         loadAudioFiles()
+        loadWhiteNoiseFiles()
         setupBindings()
     }
     
@@ -64,58 +68,88 @@ class AudioPlayer: ObservableObject {
         playSound(.ding)
     }
     
-    /// 开始播放禅韵木鱼
+    /// 开始播放白噪音（兼容旧接口）
     func startTickingSound() {
-        guard settings.enableTicking, !settings.isMuted else { return }
-
-        if let player = players[.ticking] {
-            player.numberOfLoops = -1 // 无限循环
-            player.volume = 0
-            player.play()
-
-            // 淡入效果
-            fadeIn(player: player, to: settings.getEffectiveVolume(for: .ticking))
-            isTickingPlaying = true
-            isTickingPaused = false
-        }
+        startWhiteNoise()
     }
-    
-    /// 停止播放禅韵木鱼
+
+    /// 停止播放白噪音（兼容旧接口）
     func stopTickingSound() {
-        guard let player = players[.ticking], player.isPlaying else { return }
+        stopWhiteNoise()
+    }
 
-        // 淡出效果
-        fadeOut(player: player) { [weak self] in
-            player.stop()
-            player.currentTime = 0
-            self?.isTickingPlaying = false
-            self?.isTickingPaused = false
+    /// 开始播放白噪音
+    func startWhiteNoise() {
+        guard !settings.isMuted else { return }
+
+        for whiteNoiseType in settings.enabledWhiteNoiseTypes {
+            if let player = whiteNoisePlayers[whiteNoiseType] {
+                player.numberOfLoops = -1 // 无限循环
+                player.volume = 0
+                player.play()
+
+                // 淡入效果
+                fadeIn(player: player, to: settings.getEffectiveVolume(for: whiteNoiseType))
+            }
+        }
+
+        // 更新播放状态
+        updateTickingPlayingState()
+    }
+
+    /// 停止播放白噪音
+    func stopWhiteNoise() {
+        for (_, player) in whiteNoisePlayers {
+            guard player.isPlaying else { continue }
+
+            // 淡出效果
+            fadeOut(player: player) { [weak self] in
+                player.stop()
+                player.currentTime = 0
+                self?.updateTickingPlayingState()
+            }
         }
     }
 
-    /// 暂停播放禅韵木鱼（工作阶段暂停时调用）
-    func pauseTickingSound() {
-        guard let player = players[.ticking], player.isPlaying, isTickingPlaying else { return }
-
-        // 淡出效果后暂停
-        fadeOut(player: player) { [weak self] in
-            player.pause()
-            self?.isTickingPaused = true
-        }
-    }
-
-    /// 恢复播放禅韵木鱼（工作阶段恢复时调用）
-    func resumeTickingSound() {
-        guard settings.enableTicking, !settings.isMuted, isTickingPaused else { return }
-
-        if let player = players[.ticking] {
-            player.volume = 0
-            player.play()
-
-            // 淡入效果
-            fadeIn(player: player, to: settings.getEffectiveVolume(for: .ticking))
+    /// 更新播放状态
+    private func updateTickingPlayingState() {
+        let hasPlayingWhiteNoise = whiteNoisePlayers.values.contains { $0.isPlaying }
+        isTickingPlaying = hasPlayingWhiteNoise
+        if !hasPlayingWhiteNoise {
             isTickingPaused = false
         }
+    }
+
+    /// 暂停播放白噪音（工作阶段暂停时调用）
+    func pauseTickingSound() {
+        // 暂停所有正在播放的白噪音
+        for (_, player) in whiteNoisePlayers {
+            guard player.isPlaying else { continue }
+
+            // 淡出效果后暂停
+            fadeOut(player: player) { [weak self] in
+                player.pause()
+                self?.isTickingPaused = true
+            }
+        }
+    }
+
+    /// 恢复播放白噪音（工作阶段恢复时调用）
+    func resumeTickingSound() {
+        guard !settings.isMuted, isTickingPaused else { return }
+
+        // 恢复所有启用的白噪音
+        for whiteNoiseType in settings.enabledWhiteNoiseTypes {
+            if let player = whiteNoisePlayers[whiteNoiseType] {
+                player.volume = 0
+                player.play()
+
+                // 淡入效果
+                fadeIn(player: player, to: settings.getEffectiveVolume(for: whiteNoiseType))
+            }
+        }
+
+        isTickingPaused = false
     }
     
     /// 停止所有声音
@@ -124,6 +158,12 @@ class AudioPlayer: ObservableObject {
             player.stop()
             player.currentTime = 0
         }
+
+        whiteNoisePlayers.forEach { _, player in
+            player.stop()
+            player.currentTime = 0
+        }
+
         isTickingPlaying = false
         isTickingPaused = false
         fadeTimer?.invalidate()
@@ -184,6 +224,13 @@ class AudioPlayer: ObservableObject {
             loadAudioFile(for: soundType)
         }
     }
+
+    /// 加载白噪音文件
+    private func loadWhiteNoiseFiles() {
+        for whiteNoiseType in WhiteNoiseType.allCases {
+            loadWhiteNoiseFile(for: whiteNoiseType)
+        }
+    }
     
     /// 加载单个音频文件
     private func loadAudioFile(for soundType: SoundType) {
@@ -206,6 +253,30 @@ class AudioPlayer: ObservableObject {
         } catch {
             print("加载音频文件失败: \(error)")
             createSilentPlayer(for: soundType)
+        }
+    }
+
+    /// 加载单个白噪音文件
+    private func loadWhiteNoiseFile(for whiteNoiseType: WhiteNoiseType) {
+        // 尝试从 Bundle 加载音频文件
+        guard let url = Bundle.main.url(
+            forResource: whiteNoiseType.rawValue,
+            withExtension: "mp3"
+        ) else {
+            print("找不到白噪音文件: \(whiteNoiseType.fileName)")
+            // 创建静默播放器作为占位符
+            createSilentWhiteNoisePlayer(for: whiteNoiseType)
+            return
+        }
+
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.prepareToPlay()
+            player.volume = settings.getEffectiveVolume(for: whiteNoiseType)
+            whiteNoisePlayers[whiteNoiseType] = player
+        } catch {
+            print("加载白噪音文件失败: \(error)")
+            createSilentWhiteNoisePlayer(for: whiteNoiseType)
         }
     }
     
@@ -252,6 +323,50 @@ class AudioPlayer: ObservableObject {
             print("创建静默播放器失败: \(error)")
         }
     }
+
+    /// 创建静默白噪音播放器（用于测试或音频文件缺失时）
+    private func createSilentWhiteNoisePlayer(for whiteNoiseType: WhiteNoiseType) {
+        // 创建一个极短的静音音频作为占位符
+        let sampleRate = 44100.0
+        let duration = 0.01
+        let frameCount = Int(sampleRate * duration)
+
+        guard let format = AVAudioFormat(
+            standardFormatWithSampleRate: sampleRate,
+            channels: 1
+        ),
+              let buffer = AVAudioPCMBuffer(
+            pcmFormat: format,
+            frameCapacity: AVAudioFrameCount(frameCount)
+        ) else { return }
+
+        buffer.frameLength = buffer.frameCapacity
+
+        // 填充静音数据
+        if let channelData = buffer.floatChannelData {
+            for frame in 0..<frameCount {
+                channelData[0][frame] = 0.0
+            }
+        }
+
+        // 将缓冲区写入临时文件
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(whiteNoiseType.rawValue)_silent.mp3")
+
+        do {
+            let file = try AVAudioFile(
+                forWriting: tempURL,
+                settings: format.settings
+            )
+            try file.write(from: buffer)
+
+            let player = try AVAudioPlayer(contentsOf: tempURL)
+            player.prepareToPlay()
+            whiteNoisePlayers[whiteNoiseType] = player
+        } catch {
+            print("创建静默白噪音播放器失败: \(error)")
+        }
+    }
     
     /// 设置绑定
     private func setupBindings() {
@@ -267,6 +382,10 @@ class AudioPlayer: ObservableObject {
     private func updateVolumes() {
         for (soundType, player) in players {
             player.volume = settings.getEffectiveVolume(for: soundType)
+        }
+
+        for (whiteNoiseType, player) in whiteNoisePlayers {
+            player.volume = settings.getEffectiveVolume(for: whiteNoiseType)
         }
     }
     
