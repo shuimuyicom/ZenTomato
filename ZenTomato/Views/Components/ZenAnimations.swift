@@ -230,7 +230,7 @@ struct ZenNumberTransition: View {
             .onAppear {
                 animateNumber()
             }
-            .onChange(of: number) { _, _ in
+            .onChange(of: number) { _ in
                 animateNumber()
             }
     }

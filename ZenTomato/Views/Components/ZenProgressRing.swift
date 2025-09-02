@@ -116,7 +116,7 @@ struct ZenProgressRing: View {
                 particleAnimation = true
             }
         }
-        .onChange(of: progress) { _, newValue in
+        .onChange(of: progress) { newValue in
             animatedProgress = newValue
         }
     }
