@@ -372,10 +372,10 @@ struct MainView: View {
     /// 音效内容
     private var zenAudioContent: some View {
         VStack(spacing: 16) {
-            // 音效设置卡片
+            // 开始结束音效设置卡片
             VStack(spacing: 12) {
                 HStack {
-                    Label("音效设置", systemImage: "speaker.wave.2")
+                    Label("开始结束", systemImage: "speaker.wave.2")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(Color.zenTextGray)
                     Spacer()
@@ -408,10 +408,10 @@ struct MainView: View {
             .background(Color.zenCardBackground.opacity(0.95))
             .cornerRadius(16)
 
-            // 禅韵木鱼设置卡片
+            // 白噪音设置卡片
             VStack(spacing: 12) {
                 HStack {
-                    Label("禅韵木鱼", systemImage: "waveform")
+                    Label("白噪音", systemImage: "waveform")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(Color.zenTextGray)
                     Spacer()
@@ -435,7 +435,6 @@ struct MainView: View {
             .background(Color.zenCardBackground.opacity(0.95))
             .cornerRadius(16)
         }
-        .padding(.horizontal, 20)
     }
     
     /// 禅意标签栏

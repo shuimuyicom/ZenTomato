@@ -108,7 +108,7 @@ ZenTomato/
 └── Resources/           # 资源文件
     ├── windup.mp3
     ├── ding.mp3
-    └── ticking.mp3
+    └── zenresonance.mp3
 ```
 
 ## 构建和运行

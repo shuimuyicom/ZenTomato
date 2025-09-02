@@ -57,7 +57,7 @@ struct AudioSettings: Codable {
 enum SoundType: String, CaseIterable {
     case windup = "windup"
     case ding = "ding"
-    case ticking = "ticking"
+    case ticking = "zenresonance"
     
     var displayName: String {
         switch self {
@@ -77,7 +77,7 @@ enum SoundType: String, CaseIterable {
         case .ding:
             return "ding.mp3"
         case .ticking:
-            return "ticking.mp3"
+            return "zenresonance.mp3"
         }
     }
 }
