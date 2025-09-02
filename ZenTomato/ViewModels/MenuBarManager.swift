@@ -262,7 +262,11 @@ class MenuBarManager: NSObject, ObservableObject {
         compositeImage.lockFocus()
 
         // 绘制基础图标 - 始终使用白色
-        let baseImageCopy = baseImage.copy() as! NSImage
+        guard let baseImageCopy = baseImage.copy() as? NSImage else {
+            print("⚠️ 无法复制菜单栏图标")
+            compositeImage.unlockFocus()
+            return baseImage // 返回原始图像作为回退
+        }
         baseImageCopy.isTemplate = true
 
         // 始终使用白色绘制图标（不考虑系统主题）
@@ -272,7 +276,12 @@ class MenuBarManager: NSObject, ObservableObject {
 
         // 创建图标的蒙版并填充白色
         if let cgImage = baseImageCopy.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-            let context = NSGraphicsContext.current!.cgContext
+            guard let currentContext = NSGraphicsContext.current else {
+                print("⚠️ 无法获取图形上下文")
+                compositeImage.unlockFocus()
+                return baseImage // 返回原始图像作为回退
+            }
+            let context = currentContext.cgContext
             context.saveGState()
             context.clip(to: iconRect, mask: cgImage)
             context.fill(iconRect)
