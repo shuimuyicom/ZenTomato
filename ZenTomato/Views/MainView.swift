@@ -379,7 +379,7 @@ struct MainView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(Color.zenTextGray)
                     Spacer()
-                    
+
                     Toggle("", isOn: Binding(
                         get: { !audioPlayer.settings.isMuted },
                         set: { audioPlayer.settings.isMuted = !$0 }
@@ -387,7 +387,7 @@ struct MainView: View {
                     .zenCompactStyle()
                     .labelsHidden()
                 }
-                
+
                 if !audioPlayer.settings.isMuted {
                     VStack(spacing: 12) {
                         ZenVolumeRow(
@@ -395,13 +395,34 @@ struct MainView: View {
                             title: "开始音效",
                             volume: $audioPlayer.settings.windupVolume
                         )
-                        
+
                         ZenVolumeRow(
                             icon: "bell",
                             title: "结束音效",
                             volume: $audioPlayer.settings.dingVolume
                         )
-                        
+                    }
+                }
+            }
+            .padding(16)
+            .background(Color.zenCardBackground.opacity(0.95))
+            .cornerRadius(16)
+
+            // 白噪音设置卡片
+            VStack(spacing: 12) {
+                HStack {
+                    Label("白噪音设置", systemImage: "waveform")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Color.zenTextGray)
+                    Spacer()
+
+                    Toggle("", isOn: $audioPlayer.settings.enableTicking)
+                        .zenCompactStyle()
+                        .labelsHidden()
+                }
+
+                if audioPlayer.settings.enableTicking && !audioPlayer.settings.isMuted {
+                    VStack(spacing: 12) {
                         ZenVolumeRow(
                             icon: "metronome",
                             title: "滴答声",
@@ -414,6 +435,7 @@ struct MainView: View {
             .background(Color.zenCardBackground.opacity(0.95))
             .cornerRadius(16)
         }
+        .padding(.horizontal, 20)
     }
     
     /// 禅意标签栏
