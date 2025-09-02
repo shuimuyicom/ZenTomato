@@ -159,7 +159,7 @@ class AudioPlayer: ObservableObject {
         // 尝试从 Bundle 加载音频文件
         guard let url = Bundle.main.url(
             forResource: soundType.rawValue,
-            withExtension: "wav"
+            withExtension: "mp3"
         ) else {
             print("找不到音频文件: \(soundType.fileName)")
             // 创建静默播放器作为占位符
@@ -205,7 +205,7 @@ class AudioPlayer: ObservableObject {
         
         // 将缓冲区写入临时文件
         let tempURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("\(soundType.rawValue)_silent.wav")
+            .appendingPathComponent("\(soundType.rawValue)_silent.mp3")
         
         do {
             let file = try AVAudioFile(

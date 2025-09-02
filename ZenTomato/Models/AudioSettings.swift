@@ -73,11 +73,11 @@ enum SoundType: String, CaseIterable {
     var fileName: String {
         switch self {
         case .windup:
-            return "windup.wav"
+            return "windup.mp3"
         case .ding:
-            return "ding.wav"
+            return "ding.mp3"
         case .ticking:
-            return "ticking.wav"
+            return "ticking.mp3"
         }
     }
 }

@@ -106,9 +106,9 @@ ZenTomato/
 │   ├── Color+Zen.swift
 │   └── Animation+Zen.swift
 └── Resources/           # 资源文件
-    ├── windup.wav
-    ├── ding.wav
-    └── ticking.wav
+    ├── windup.mp3
+    ├── ding.mp3
+    └── ticking.mp3
 ```
 
 ## 构建和运行
