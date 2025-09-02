@@ -96,7 +96,9 @@ class TimerEngine: ObservableObject {
     func start() {
         guard currentState != .running else { return }
         
-        if currentState == .paused {
+        let isResumingFromPause = (currentState == .paused)
+        
+        if isResumingFromPause {
             // 从暂停恢复
             timeRemaining = pausedTimeRemaining
         } else {
@@ -108,12 +110,22 @@ class TimerEngine: ObservableObject {
         phaseStartTime = Date()
         startTimer()
         
-        // 发送阶段开始通知
-        NotificationCenter.default.post(
-            name: .timerPhaseStarted,
-            object: nil,
-            userInfo: ["phase": currentPhase]
-        )
+        // 根据是否从暂停恢复发送不同的通知
+        if isResumingFromPause {
+            // 发送恢复通知
+            NotificationCenter.default.post(
+                name: .timerResumed,
+                object: nil,
+                userInfo: ["phase": currentPhase]
+            )
+        } else {
+            // 发送阶段开始通知
+            NotificationCenter.default.post(
+                name: .timerPhaseStarted,
+                object: nil,
+                userInfo: ["phase": currentPhase]
+            )
+        }
     }
     
     /// 暂停计时
@@ -287,6 +299,7 @@ extension Notification.Name {
     static let timerPhaseStarted = Notification.Name("ZenTomato.timerPhaseStarted")
     static let timerPhaseCompleted = Notification.Name("ZenTomato.timerPhaseCompleted")
     static let timerPaused = Notification.Name("ZenTomato.timerPaused")
+    static let timerResumed = Notification.Name("ZenTomato.timerResumed")
     static let timerStopped = Notification.Name("ZenTomato.timerStopped")
     static let timerTick = Notification.Name("ZenTomato.timerTick")
 }

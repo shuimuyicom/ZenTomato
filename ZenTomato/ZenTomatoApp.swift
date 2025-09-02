@@ -124,6 +124,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
+        // 监听计时器恢复
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTimerResumed(_:)),
+            name: .timerResumed,
+            object: nil
+        )
+
         // 监听计时器停止
         NotificationCenter.default.addObserver(
             self,
@@ -136,16 +144,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func handlePhaseStarted(_ notification: Notification) {
         guard let phase = notification.userInfo?["phase"] as? TimerPhase else { return }
 
-        // 播放开始音效和禅韵木鱼
+        // 播放开始音效和白噪音
         if phase == .work {
             audioPlayer.playWindupSound()
-            // 如果是从暂停恢复，则恢复禅韵木鱼；否则开始播放
-            if audioPlayer.isTickingPaused {
-                audioPlayer.resumeTickingSound()
-            } else {
-                audioPlayer.startTickingSound()
-            }
+            // 开始新工作阶段时，开始播放白噪音
+            audioPlayer.startTickingSound()
         } else {
+            // 休息阶段停止白噪音
             audioPlayer.stopTickingSound()
         }
     }
@@ -153,8 +158,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func handlePhaseCompleted(_ notification: Notification) {
         guard let phase = notification.userInfo?["phase"] as? TimerPhase else { return }
 
-        // 播放结束音效
+        // 播放结束音效并停止白噪音
         audioPlayer.playDingSound()
+        
+        // 无论哪个阶段完成都停止白噪音，确保状态清理
         audioPlayer.stopTickingSound()
 
         // 发送通知
@@ -243,9 +250,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// 处理计时器暂停
     @objc private func handleTimerPaused(_ notification: Notification) {
-        // 如果当前是工作阶段且正在播放禅韵木鱼，则暂停播放
+        // 如果当前是工作阶段且正在播放白噪音，则暂停播放
         if timerEngine.currentPhase == .work && audioPlayer.isTickingPlaying {
             audioPlayer.pauseTickingSound()
+        }
+    }
+
+    /// 处理计时器恢复
+    @objc private func handleTimerResumed(_ notification: Notification) {
+        guard let phase = notification.userInfo?["phase"] as? TimerPhase else { return }
+        
+        // 如果是从工作阶段暂停恢复，则恢复白噪音播放
+        if phase == .work && audioPlayer.isTickingPaused {
+            audioPlayer.resumeTickingSound()
         }
     }
 
