@@ -38,9 +38,12 @@ class LaunchAtLoginManager: ObservableObject {
         self.settings = SystemSettings.load()
         // 初始化时检查系统实际状态
         checkCurrentLaunchAtLoginStatus()
-        // 如果设置和系统状态不一致，以设置为准
-        if settings.launchAtLogin != isLaunchAtLoginEnabled {
-            updateLaunchAtLoginStatus()
+        // 对于 macOS 13.0+，如果设置和系统状态不一致，以设置为准
+        // 对于 macOS 12.4-12.x，状态检查已使用存储的设置，无需额外同步
+        if #available(macOS 13.0, *) {
+            if settings.launchAtLogin != isLaunchAtLoginEnabled {
+                updateLaunchAtLoginStatus()
+            }
         }
     }
     
@@ -59,7 +62,9 @@ class LaunchAtLoginManager: ObservableObject {
         let success = updateSystemLaunchAtLoginStatus(enabled)
         if success {
             settings.launchAtLogin = enabled
-            checkCurrentLaunchAtLoginStatus() // 更新实时状态
+            // 对于 macOS 13.0+，从系统重新读取状态
+            // 对于 macOS 12.4-12.x，状态已同步到存储设置
+            checkCurrentLaunchAtLoginStatus()
         }
         return success
     }
@@ -130,22 +135,10 @@ class LaunchAtLoginManager: ObservableObject {
             let service = SMAppService.mainApp
             return service.status == .enabled
         } else {
-            // 回退到旧的 API (macOS 13.0 以下)
-            // 通过检查登录项来确定当前状态
-            // 注意：这个方法在沙盒环境中可能有限制
-            guard let jobDicts = SMCopyAllJobDictionaries(kSMDomainUserLaunchd)?.takeRetainedValue() as? [[String: Any]] else {
-                return false
-            }
-
-            // 查找匹配的启动项
-            for job in jobDicts {
-                if let label = job["Label"] as? String,
-                   label == bundleIdentifier {
-                    return job["OnDemand"] as? Bool == false // OnDemand 为 false 表示开机启动
-                }
-            }
-
-            return false
+            // 对于 macOS 12.4-12.x：由于 SMCopyAllJobDictionaries 已废弃且没有可靠的替代方案，
+            // 我们使用存储的设置状态作为状态源，这样避免了使用废弃的 API
+            // 这种方法在大多数情况下是可靠的，因为设置状态会在每次更改时同步到系统
+            return settings.launchAtLogin
         }
     }
 }
