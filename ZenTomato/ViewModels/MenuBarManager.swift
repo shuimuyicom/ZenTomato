@@ -194,20 +194,20 @@ class MenuBarManager: NSObject, ObservableObject {
     
     /// 设置绑定
     private func setupBindings() {
-        // 监听计时器状态变化
+        // 监听计时器状态变化 - 状态变化时需要更新图标（显示/隐藏状态指示器）
         timerEngine.$currentState
             .sink { [weak self] _ in
-                self?.updateMenuBarDisplay()
+                self?.updateMenuBarIcon()  // 修改：状态变化时也要更新图标
             }
             .store(in: &cancellables)
-        
-        // 监听计时器阶段变化
+
+        // 监听计时器阶段变化 - 阶段变化时需要更新图标颜色
         timerEngine.$currentPhase
             .sink { [weak self] _ in
                 self?.updateMenuBarIcon()
             }
             .store(in: &cancellables)
-        
+
         // 监听配置变化
         timerEngine.$configuration
             .map { $0.showTimeInMenuBar }
@@ -220,25 +220,107 @@ class MenuBarManager: NSObject, ObservableObject {
             guard let self = self,
                   let button = self.statusItem?.button else { return }
 
-            // 使用自定义番茄图标，始终显示为白色
-            if let image = NSImage(named: "BarIconIdle") {
-                // 设置为模板图像，这样会自动适应系统主题（在深色模式下显示白色，浅色模式下显示黑色）
-                image.isTemplate = true
-                button.image = image
-
-                // 不设置 contentTintColor，让系统自动处理颜色
-                button.contentTintColor = nil
-            } else {
-                // 如果自定义图标加载失败，回退到系统图标
-                if let image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil) {
-                    image.isTemplate = true
-                    button.image = image
-                    button.contentTintColor = nil
-                }
-            }
+            // 创建带状态指示器的图标
+            let finalImage = self.createIconWithStatusIndicator()
+            button.image = finalImage
 
             // 更新标题
             self.updateMenuBarDisplay()
+        }
+    }
+
+    /// 创建带状态指示器的图标
+    private func createIconWithStatusIndicator() -> NSImage? {
+        // 调试信息
+        print("🔍 创建图标 - 当前状态: \(timerEngine.currentState), 当前阶段: \(timerEngine.currentPhase)")
+
+        // 获取基础图标
+        let baseImage: NSImage
+        if let customImage = NSImage(named: "BarIconIdle") {
+            baseImage = customImage
+        } else if let systemImage = NSImage(systemSymbolName: "timer", accessibilityDescription: nil) {
+            baseImage = systemImage
+        } else {
+            return nil
+        }
+
+        // 设置图标尺寸（菜单栏标准尺寸）
+        let iconSize = NSSize(width: 18, height: 18)
+        baseImage.size = iconSize
+
+        // 如果计时器处于停止状态，直接返回基础图标
+        guard timerEngine.currentState == .running || timerEngine.currentState == .paused else {
+            print("⚪ 返回基础图标（无状态指示器）")
+            baseImage.isTemplate = true
+            return baseImage
+        }
+
+        print("🔴 创建带状态指示器的图标 - 阶段: \(timerEngine.currentPhase)")
+
+        // 创建复合图像
+        let compositeImage = NSImage(size: iconSize)
+        compositeImage.lockFocus()
+
+        // 绘制基础图标 - 始终使用白色
+        let baseImageCopy = baseImage.copy() as! NSImage
+        baseImageCopy.isTemplate = true
+
+        // 始终使用白色绘制图标（不考虑系统主题）
+        let iconColor = NSColor.white
+        iconColor.setFill()
+        let iconRect = NSRect(origin: .zero, size: iconSize)
+
+        // 创建图标的蒙版并填充白色
+        if let cgImage = baseImageCopy.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            let context = NSGraphicsContext.current!.cgContext
+            context.saveGState()
+            context.clip(to: iconRect, mask: cgImage)
+            context.fill(iconRect)
+            context.restoreGState()
+        } else {
+            // 回退方案：直接绘制图标
+            baseImageCopy.draw(in: iconRect)
+        }
+
+        // 获取状态指示器颜色
+        let indicatorColor = getStatusIndicatorColor()
+
+        // 绘制状态指示器小圆点（位于右下角）
+        let dotSize: CGFloat = 6
+        let dotRect = NSRect(
+            x: iconSize.width - dotSize - 1,
+            y: 1,
+            width: dotSize,
+            height: dotSize
+        )
+
+        // 绘制白色背景圆圈（增强对比度）
+        NSColor.white.setFill()
+        let backgroundPath = NSBezierPath(ovalIn: dotRect.insetBy(dx: -1, dy: -1))
+        backgroundPath.fill()
+
+        // 绘制彩色状态圆点
+        indicatorColor.setFill()
+        let dotPath = NSBezierPath(ovalIn: dotRect)
+        dotPath.fill()
+
+        compositeImage.unlockFocus()
+
+        // 不设置为模板图像，保持我们自定义的颜色
+        compositeImage.isTemplate = false
+
+        return compositeImage
+    }
+
+    /// 获取状态指示器颜色
+    private func getStatusIndicatorColor() -> NSColor {
+        switch timerEngine.currentPhase {
+        case .work:
+            return NSColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0) // zenRed
+        case .shortBreak:
+            return NSColor(red: 0.4, green: 0.7, blue: 0.4, alpha: 1.0) // zenGreen
+        case .longBreak:
+            return NSColor(red: 0.4, green: 0.6, blue: 0.8, alpha: 1.0) // zenBlue
         }
     }
     
