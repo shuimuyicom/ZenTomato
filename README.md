@@ -145,3 +145,14 @@ open ZenTomato.xcodeproj
 2. **打开控制面板**：点击菜单栏图标
 3. **开始计时**：点击主控制按钮
 4. **调整时长**：在计时器
+
+
+有任何疑问，请通过以下方式联系我们：
+
+- 开发者：水木易
+- 邮箱：shuimuyicom@gmail.com
+- GitHub：https://github.com/shuimuyicom
+
+---
+
+感谢您选择禅番茄，祝您工作愉快，生活美满！
