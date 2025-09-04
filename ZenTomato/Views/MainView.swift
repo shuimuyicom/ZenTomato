@@ -380,15 +380,12 @@ struct MainView: View {
                         .foregroundColor(Color.zenTextGray)
                     Spacer()
 
-                    Toggle("", isOn: Binding(
-                        get: { !audioPlayer.settings.isMuted },
-                        set: { audioPlayer.settings.isMuted = !$0 }
-                    ))
-                    .zenCompactStyle()
-                    .labelsHidden()
+                    Toggle("", isOn: $audioPlayer.settings.enableStartEndSounds)
+                        .zenCompactStyle()
+                        .labelsHidden()
                 }
 
-                if !audioPlayer.settings.isMuted {
+                if audioPlayer.settings.enableStartEndSounds {
                     VStack(spacing: 12) {
                         ZenVolumeRow(
                             icon: "play.circle",
@@ -434,7 +431,7 @@ struct MainView: View {
                     .labelsHidden()
                 }
 
-                if !audioPlayer.settings.enabledWhiteNoiseTypes.isEmpty && !audioPlayer.settings.isMuted {
+                if !audioPlayer.settings.enabledWhiteNoiseTypes.isEmpty {
                     VStack(spacing: 12) {
                         ForEach(WhiteNoiseType.allCases, id: \.self) { whiteNoiseType in
                             ZenWhiteNoiseRow(

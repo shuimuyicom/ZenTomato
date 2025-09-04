@@ -29,8 +29,10 @@ struct AudioSettings: Codable {
     var dingVolume: Float = 1.0
     /// 禅韵木鱼音量 (0.0 - 1.0)
     var tickingVolume: Float = 0.5
-    /// 是否静音
+    /// 是否静音（全局静音开关）
     var isMuted: Bool = false
+    /// 是否启用开始结束音效
+    var enableStartEndSounds: Bool = true
     /// 是否启用禅韵木鱼
     var enableTicking: Bool = true
 
@@ -63,15 +65,15 @@ struct AudioSettings: Codable {
         return basicValid && whiteNoiseValid
     }
 
-    /// 获取实际音量（考虑静音状态）
+    /// 获取实际音量（考虑静音状态和独立开关）
     func getEffectiveVolume(for soundType: SoundType) -> Float {
         guard !isMuted else { return 0.0 }
 
         switch soundType {
         case .windup:
-            return windupVolume
+            return enableStartEndSounds ? windupVolume : 0.0
         case .ding:
-            return dingVolume
+            return enableStartEndSounds ? dingVolume : 0.0
         case .ticking:
             return enableTicking ? tickingVolume : 0.0
         }

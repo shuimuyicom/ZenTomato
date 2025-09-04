@@ -18,3 +18,4 @@
 - 已成功修复ZenTomato应用中的所有代码安全问题：1)修复MenuBarManager.swift中的强制类型转换，使用安全的可选绑定；2)修复强制解包问题，添加适当的错误处理。Release版本编译成功，应用已完全准备好提交App Store审核。
 - 完成ZenTomato应用的完整App Store审核准备：1)修复所有代码安全问题；2)优化部署目标从macOS 15.0到12.4，扩大用户覆盖率；3)修复API兼容性问题；4)Release编译成功。应用已完全准备好提交App Store，生成了详细的审核报告和兼容性优化报告。
 - 应用图标全面更新完成：已使用用户提供的新ZenTomato.png图标，通过Icons/convert.sh脚本自动生成所有尺寸变体（10个应用图标+3个菜单栏图标），更新Assets.xcassets资源，Xcode Release编译成功，图标已嵌入应用并注册到Launch Services，新图标将在Dock、菜单栏、通知等所有场景正确显示。
+- 音效控制逻辑修复完成：解决了"开始结束"音效开关意外关闭白噪音的bug。在AudioSettings.swift中添加了独立的enableStartEndSounds属性，修改了音量计算逻辑使两类音效独立控制。在MainView.swift中重新设计了音效界面布局：添加了"全局控制"卡片（开关在标题右侧），使"开始结束"和"白噪音"功能完全独立。应用编译成功，现在两种音效可以独立开关，不再存在错误联动关系。
