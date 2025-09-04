@@ -65,10 +65,8 @@ struct AudioSettings: Codable {
         return basicValid && whiteNoiseValid
     }
 
-    /// 获取实际音量（考虑静音状态和独立开关）
+    /// 获取实际音量（考虑独立开关）
     func getEffectiveVolume(for soundType: SoundType) -> Float {
-        guard !isMuted else { return 0.0 }
-
         switch soundType {
         case .windup:
             return enableStartEndSounds ? windupVolume : 0.0
@@ -79,9 +77,8 @@ struct AudioSettings: Codable {
         }
     }
 
-    /// 获取白噪音实际音量（考虑静音状态和启用状态）
+    /// 获取白噪音实际音量（考虑启用状态）
     func getEffectiveVolume(for whiteNoiseType: WhiteNoiseType) -> Float {
-        guard !isMuted else { return 0.0 }
         guard let setting = whiteNoiseSettings[whiteNoiseType], setting.isEnabled else { return 0.0 }
         return setting.volume
     }

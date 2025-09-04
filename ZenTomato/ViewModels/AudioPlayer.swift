@@ -80,8 +80,6 @@ class AudioPlayer: ObservableObject {
 
     /// 开始播放白噪音
     func startWhiteNoise() {
-        guard !settings.isMuted else { return }
-
         for whiteNoiseType in settings.enabledWhiteNoiseTypes {
             if let player = whiteNoisePlayers[whiteNoiseType] {
                 player.numberOfLoops = -1 // 无限循环
@@ -136,7 +134,7 @@ class AudioPlayer: ObservableObject {
 
     /// 恢复播放白噪音（工作阶段恢复时调用）
     func resumeTickingSound() {
-        guard !settings.isMuted, isTickingPaused else { return }
+        guard isTickingPaused else { return }
 
         // 恢复所有启用的白噪音
         for whiteNoiseType in settings.enabledWhiteNoiseTypes {
@@ -183,12 +181,6 @@ class AudioPlayer: ObservableObject {
                 player.volume = settings.getEffectiveVolume(for: .ticking)
             }
         }
-    }
-    
-    /// 切换静音状态
-    func toggleMute() {
-        settings.isMuted.toggle()
-        updateVolumes()
     }
     
     /// 测试音效
@@ -391,8 +383,7 @@ class AudioPlayer: ObservableObject {
     
     /// 播放音效
     private func playSound(_ soundType: SoundType) {
-        guard !settings.isMuted,
-              let player = players[soundType] else { return }
+        guard let player = players[soundType] else { return }
         
         // 如果正在播放，先停止
         if player.isPlaying {
