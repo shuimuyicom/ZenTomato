@@ -17,3 +17,4 @@
 - App Store审核前检查完成：ZenTomato应用总体合规性良好，可立即提交审核。发现2个中等风险代码问题（MenuBarManager.swift中的强制解包），已提供具体修复方案。应用完全本地化、无数据收集、权限使用合理，符合App Store审核要求。生成了详细的审核报告文档。
 - 已成功修复ZenTomato应用中的所有代码安全问题：1)修复MenuBarManager.swift中的强制类型转换，使用安全的可选绑定；2)修复强制解包问题，添加适当的错误处理。Release版本编译成功，应用已完全准备好提交App Store审核。
 - 完成ZenTomato应用的完整App Store审核准备：1)修复所有代码安全问题；2)优化部署目标从macOS 15.0到12.4，扩大用户覆盖率；3)修复API兼容性问题；4)Release编译成功。应用已完全准备好提交App Store，生成了详细的审核报告和兼容性优化报告。
+- 应用图标全面更新完成：已使用用户提供的新ZenTomato.png图标，通过Icons/convert.sh脚本自动生成所有尺寸变体（10个应用图标+3个菜单栏图标），更新Assets.xcassets资源，Xcode Release编译成功，图标已嵌入应用并注册到Launch Services，新图标将在Dock、菜单栏、通知等所有场景正确显示。
