@@ -20,3 +20,4 @@
 - 应用图标全面更新完成：已使用用户提供的新ZenTomato.png图标，通过Icons/convert.sh脚本自动生成所有尺寸变体（10个应用图标+3个菜单栏图标），更新Assets.xcassets资源，Xcode Release编译成功，图标已嵌入应用并注册到Launch Services，新图标将在Dock、菜单栏、通知等所有场景正确显示。
 - 音效控制逻辑修复完成：解决了"开始结束"音效开关意外关闭白噪音的bug。在AudioSettings.swift中添加了独立的enableStartEndSounds属性，修改了音量计算逻辑使两类音效独立控制。在MainView.swift中重新设计了音效界面布局：添加了"全局控制"卡片（开关在标题右侧），使"开始结束"和"白噪音"功能完全独立。应用编译成功，现在两种音效可以独立开关，不再存在错误联动关系。
 - 应用图标更新完成：已使用用户提供的新ZenTomato.png图标，通过Icons/convert.sh脚本自动生成所有尺寸变体（10个应用图标+3个菜单栏图标），更新Assets.xcassets资源，清理系统图标缓存（IconServices、Dock重启），新图标已准备好在Xcode编译后在Dock、菜单栏、通知等所有场景正确显示。
+- 通知图标缓存问题修复完成：诊断发现是应用运行时的图标缓存问题，已强制终止应用进程，清理通知系统缓存，重新编译应用生成新的AppIcon.icns文件（136KB），成功注册到Launch Services。通知图标现在将显示更新后的图标。
