@@ -556,12 +556,27 @@ struct MainView: View {
 
 // MARK: - Supporting Views
 
-/// 时间设置行
+/// 长按调整速度枚举
+enum LongPressSpeed: TimeInterval {
+    case slow = 0.2      // 200ms - 初始速度
+    case medium = 0.1    // 100ms - 2秒后加速
+    case fast = 0.05     // 50ms - 5秒后最大速度
+}
+
+/// 时间设置行 - 支持长按快速调整
 struct TimeSettingRow: View {
     let title: String
     @Binding var value: Int
     let unit: String
     let color: Color
+    
+    // MARK: - 长按状态管理
+    @State private var isLongPressingPlus = false
+    @State private var isLongPressingMinus = false
+    @State private var longPressTimer: Timer?
+    @State private var currentSpeed: LongPressSpeed = .slow
+    @State private var pressStartTime: Date?
+    @State private var initialPressDelay: Timer?
     
     var body: some View {
         HStack {
@@ -572,24 +587,52 @@ struct TimeSettingRow: View {
             Spacer()
             
             HStack(spacing: 12) {
-                Button(action: { if value > 1 { value -= 1 } }) {
+                // 减号按钮 - 支持长按
+                Button(action: { 
+                    decreaseValue()
+                }) {
                     Image(systemName: "minus.circle.fill")
                         .font(.system(size: 18))
-                        .foregroundColor(color.opacity(0.8))
+                        .foregroundColor(color.opacity(isLongPressingMinus ? 1.0 : 0.8))
+                        .scaleEffect(isLongPressingMinus ? 1.1 : 1.0)
+                        .animation(.easeInOut(duration: 0.1), value: isLongPressingMinus)
                 }
                 .buttonStyle(PlainButtonStyle())
+                .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 10) {
+                    // 长按触发
+                } onPressingChanged: { pressing in
+                    if pressing {
+                        startLongPress(.minus)
+                    } else {
+                        stopLongPress()
+                    }
+                }
                 
                 Text("\(value)")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(color)
                     .frame(width: 30)
                 
-                Button(action: { value += 1 }) {
+                // 加号按钮 - 支持长按  
+                Button(action: { 
+                    increaseValue()
+                }) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 18))
-                        .foregroundColor(color.opacity(0.8))
+                        .foregroundColor(color.opacity(isLongPressingPlus ? 1.0 : 0.8))
+                        .scaleEffect(isLongPressingPlus ? 1.1 : 1.0)
+                        .animation(.easeInOut(duration: 0.1), value: isLongPressingPlus)
                 }
                 .buttonStyle(PlainButtonStyle())
+                .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 10) {
+                    // 长按触发
+                } onPressingChanged: { pressing in
+                    if pressing {
+                        startLongPress(.plus)
+                    } else {
+                        stopLongPress()
+                    }
+                }
                 
                 Text(unit)
                     .font(.system(size: 11))
@@ -601,6 +644,132 @@ struct TimeSettingRow: View {
         .padding(.horizontal, 12)
         .background(Color.zenGray.opacity(0.5))
         .cornerRadius(8)
+    }
+    
+    // MARK: - 长按操作类型
+    
+    enum ButtonType {
+        case plus, minus
+    }
+    
+    // MARK: - 长按处理方法
+    
+    /// 单次增加数值
+    private func increaseValue() {
+        value += 1
+        // 添加触觉反馈
+        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+    }
+    
+    /// 单次减少数值
+    private func decreaseValue() {
+        if value > 1 {
+            value -= 1
+            // 添加触觉反馈
+            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+        }
+    }
+    
+    /// 开始长按处理
+    private func startLongPress(_ buttonType: ButtonType) {
+        // 设置状态
+        switch buttonType {
+        case .plus:
+            isLongPressingPlus = true
+        case .minus:
+            isLongPressingMinus = true
+        }
+        
+        // 记录开始时间
+        pressStartTime = Date()
+        currentSpeed = .slow
+        
+        // 设置初始延迟定时器（500毫秒后开始快速调整）
+        initialPressDelay = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
+            self.startContinuousAdjustment(buttonType)
+        }
+    }
+    
+    /// 开始连续调整
+    private func startContinuousAdjustment(_ buttonType: ButtonType) {
+        // 取消初始延迟定时器
+        initialPressDelay?.invalidate()
+        initialPressDelay = nil
+        
+        // 开始连续调整定时器
+        longPressTimer = Timer.scheduledTimer(withTimeInterval: currentSpeed.rawValue, repeats: true) { _ in
+            // 执行数值调整
+            switch buttonType {
+            case .plus:
+                if self.isLongPressingPlus {
+                    self.increaseValue()
+                    self.updateSpeedIfNeeded()
+                }
+            case .minus:
+                if self.isLongPressingMinus {
+                    self.decreaseValue()
+                    self.updateSpeedIfNeeded()
+                }
+            }
+        }
+    }
+    
+    /// 停止长按处理
+    private func stopLongPress() {
+        // 清除状态
+        isLongPressingPlus = false
+        isLongPressingMinus = false
+        
+        // 取消所有定时器
+        initialPressDelay?.invalidate()
+        initialPressDelay = nil
+        longPressTimer?.invalidate()
+        longPressTimer = nil
+        
+        // 重置速度和开始时间
+        currentSpeed = .slow
+        pressStartTime = nil
+    }
+    
+    /// 根据长按时间更新调整速度
+    private func updateSpeedIfNeeded() {
+        guard let startTime = pressStartTime else { return }
+        
+        let pressDuration = Date().timeIntervalSince(startTime)
+        let newSpeed: LongPressSpeed
+        
+        if pressDuration >= 5.0 {
+            newSpeed = .fast      // 5秒后最快速度
+        } else if pressDuration >= 2.0 {
+            newSpeed = .medium    // 2秒后中等速度
+        } else {
+            newSpeed = .slow      // 初始速度
+        }
+        
+        // 如果速度发生变化，重新设置定时器
+        if newSpeed != currentSpeed {
+            currentSpeed = newSpeed
+            longPressTimer?.invalidate()
+            
+            // 重新开始定时器，使用新速度
+            if isLongPressingPlus || isLongPressingMinus {
+                let buttonType: ButtonType = isLongPressingPlus ? .plus : .minus
+                longPressTimer = Timer.scheduledTimer(withTimeInterval: currentSpeed.rawValue, repeats: true) { _ in
+                    switch buttonType {
+                    case .plus:
+                        if self.isLongPressingPlus {
+                            self.increaseValue()
+                            self.updateSpeedIfNeeded()
+                        }
+                    case .minus:
+                        if self.isLongPressingMinus {
+                            self.decreaseValue()
+                            self.updateSpeedIfNeeded()
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
