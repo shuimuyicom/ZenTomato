@@ -39,20 +39,35 @@ check_source_files() {
     fi
 }
 
+# 生成带圆角的图标（遵循比例：radius = size * 0.2237）
+# 说明：macOS 不会自动为 App 图标加圆角，因此在素材层面应用圆角蒙版。
+# 该比例已在项目内确认（Confirmed via 寸止），可满足 Big Sur 风格的视觉一致性。
+render_appicon_with_rounded_corners() {
+    local SIZE=$1
+    local DEST=$2
+    # 计算圆角半径，向下取整以避免越界
+    local RADIUS=$(awk "BEGIN { printf \"%d\", ${SIZE} * 0.2237 }")
+    local MAX=$((SIZE - 1))
+
+    ${CONVERT} ${APPICON_SRC} -resize "!${SIZE}x${SIZE}" +repage -alpha set \
+        \( -size ${SIZE}x${SIZE} xc:none -fill white -draw "roundrectangle 0,0 ${MAX},${MAX} ${RADIUS},${RADIUS}" \) \
+        -compose CopyOpacity -composite ${DEST}
+}
+
 # 生成应用图标
 generate_appicon() {
     echo "正在生成应用图标..."
     check_source_files
-    ${CONVERT} ${APPICON_SRC} -resize '!16x16' +repage ${APPICON_ICONSET}/icon_16x16.png
-    ${CONVERT} ${APPICON_SRC} -resize '!32x32' +repage ${APPICON_ICONSET}/icon_16x16@2x.png
-    ${CONVERT} ${APPICON_SRC} -resize '!32x32' +repage ${APPICON_ICONSET}/icon_32x32.png
-    ${CONVERT} ${APPICON_SRC} -resize '!64x64' +repage ${APPICON_ICONSET}/icon_32x32@2x.png
-    ${CONVERT} ${APPICON_SRC} -resize '!128x128' +repage ${APPICON_ICONSET}/icon_128x128.png
-    ${CONVERT} ${APPICON_SRC} -resize '!256x256' +repage ${APPICON_ICONSET}/icon_128x128@2x.png
-    ${CONVERT} ${APPICON_SRC} -resize '!256x256' +repage ${APPICON_ICONSET}/icon_256x256.png
-    ${CONVERT} ${APPICON_SRC} -resize '!512x512' +repage ${APPICON_ICONSET}/icon_256x256@2x.png
-    ${CONVERT} ${APPICON_SRC} -resize '!512x512' +repage ${APPICON_ICONSET}/icon_512x512.png
-    ${CONVERT} ${APPICON_SRC} -resize '!1024x1024' +repage ${APPICON_ICONSET}/icon_512x512@2x.png
+    render_appicon_with_rounded_corners 16   ${APPICON_ICONSET}/icon_16x16.png
+    render_appicon_with_rounded_corners 32   ${APPICON_ICONSET}/icon_16x16@2x.png
+    render_appicon_with_rounded_corners 32   ${APPICON_ICONSET}/icon_32x32.png
+    render_appicon_with_rounded_corners 64   ${APPICON_ICONSET}/icon_32x32@2x.png
+    render_appicon_with_rounded_corners 128  ${APPICON_ICONSET}/icon_128x128.png
+    render_appicon_with_rounded_corners 256  ${APPICON_ICONSET}/icon_128x128@2x.png
+    render_appicon_with_rounded_corners 256  ${APPICON_ICONSET}/icon_256x256.png
+    render_appicon_with_rounded_corners 512  ${APPICON_ICONSET}/icon_256x256@2x.png
+    render_appicon_with_rounded_corners 512  ${APPICON_ICONSET}/icon_512x512.png
+    render_appicon_with_rounded_corners 1024 ${APPICON_ICONSET}/icon_512x512@2x.png
     echo "应用图标生成完成！"
 }
 
