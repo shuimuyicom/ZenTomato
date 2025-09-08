@@ -40,8 +40,11 @@ class AudioPlayer: ObservableObject {
     /// 音频引擎（用于高级音频控制）
     private var audioEngine: AVAudioEngine?
     
-    /// 淡入淡出定时器
-    private var fadeTimer: Timer?
+    /// 淡入淡出定时器（按播放器维度，避免相互打断）
+    private var fadeTimers: [ObjectIdentifier: Timer] = [:]
+    
+    /// 最近一次启用的白噪音类型集合（用于差异化响应设置变更）
+    private var lastEnabledWhiteNoiseTypes: Set<WhiteNoiseType> = []
     
     /// 取消令牌集合
     private var cancellables = Set<AnyCancellable>()
@@ -53,6 +56,8 @@ class AudioPlayer: ObservableObject {
         setupAudioSession()
         loadAudioFiles()
         loadWhiteNoiseFiles()
+        // 记录初始启用集合
+        lastEnabledWhiteNoiseTypes = Set(self.settings.enabledWhiteNoiseTypes)
         setupBindings()
     }
     
@@ -81,14 +86,7 @@ class AudioPlayer: ObservableObject {
     /// 开始播放白噪音
     func startWhiteNoise() {
         for whiteNoiseType in settings.enabledWhiteNoiseTypes {
-            if let player = whiteNoisePlayers[whiteNoiseType] {
-                player.numberOfLoops = -1 // 无限循环
-                player.volume = 0
-                player.play()
-
-                // 淡入效果
-                fadeIn(player: player, to: settings.getEffectiveVolume(for: whiteNoiseType))
-            }
+            startWhiteNoise(for: whiteNoiseType)
         }
 
         // 更新播放状态
@@ -164,7 +162,9 @@ class AudioPlayer: ObservableObject {
 
         isTickingPlaying = false
         isTickingPaused = false
-        fadeTimer?.invalidate()
+        // 取消并清空所有淡入淡出定时器
+        fadeTimers.values.forEach { $0.invalidate() }
+        fadeTimers.removeAll()
     }
     
     /// 设置音量
@@ -271,6 +271,45 @@ class AudioPlayer: ObservableObject {
             createSilentWhiteNoisePlayer(for: whiteNoiseType)
         }
     }
+
+    /// 获取（必要时懒加载）白噪音播放器
+    private func getOrLoadWhiteNoisePlayer(for whiteNoiseType: WhiteNoiseType) -> AVAudioPlayer? {
+        if let player = whiteNoisePlayers[whiteNoiseType] { return player }
+        loadWhiteNoiseFile(for: whiteNoiseType)
+        return whiteNoisePlayers[whiteNoiseType]
+    }
+
+    /// 启动某个白噪音
+    private func startWhiteNoise(for whiteNoiseType: WhiteNoiseType) {
+        guard let player = getOrLoadWhiteNoisePlayer(for: whiteNoiseType) else {
+            print("[Audio] 无法获取播放器: \(whiteNoiseType)")
+            return
+        }
+
+        player.numberOfLoops = -1 // 无限循环
+        player.currentTime = 0
+        player.volume = 0
+
+        // 尝试播放，失败则准备后重试一次
+        if !player.play() {
+            print("[Audio] 播放失败，准备后重试: \(whiteNoiseType)")
+            player.prepareToPlay()
+            _ = player.play()
+        }
+
+        // 淡入到目标音量
+        fadeIn(player: player, to: settings.getEffectiveVolume(for: whiteNoiseType))
+    }
+
+    /// 停止某个白噪音
+    private func stopWhiteNoise(for whiteNoiseType: WhiteNoiseType) {
+        guard let player = whiteNoisePlayers[whiteNoiseType], player.isPlaying else { return }
+        fadeOut(player: player) { [weak self] in
+            player.stop()
+            player.currentTime = 0
+            self?.updateTickingPlayingState()
+        }
+    }
     
     /// 创建静默播放器（用于测试或音频文件缺失时）
     private func createSilentPlayer(for soundType: SoundType) {
@@ -364,8 +403,25 @@ class AudioPlayer: ObservableObject {
     private func setupBindings() {
         // 监听设置变化
         $settings
-            .sink { [weak self] _ in
-                self?.updateVolumes()
+            .sink { [weak self] newSettings in
+                guard let self = self else { return }
+                self.updateVolumes()
+
+                // 差异化处理白噪音的启用/禁用，确保切换时立即生效
+                let newSet = Set(newSettings.enabledWhiteNoiseTypes)
+                let added = newSet.subtracting(self.lastEnabledWhiteNoiseTypes)
+                let removed = self.lastEnabledWhiteNoiseTypes.subtracting(newSet)
+
+                if !added.isEmpty || !removed.isEmpty {
+                    // 在主线程执行播放器操作
+                    DispatchQueue.main.async { [weak self] in
+                        guard let strongSelf = self else { return }
+                        added.forEach { strongSelf.startWhiteNoise(for: $0) }
+                        removed.forEach { strongSelf.stopWhiteNoise(for: $0) }
+                        strongSelf.lastEnabledWhiteNoiseTypes = newSet
+                        strongSelf.updateTickingPlayingState()
+                    }
+                }
             }
             .store(in: &cancellables)
     }
@@ -395,48 +451,54 @@ class AudioPlayer: ObservableObject {
         player.play()
     }
     
-    /// 淡入效果
+    /// 淡入效果（独立定时器，避免互相打断）
     private func fadeIn(player: AVAudioPlayer, to targetVolume: Float, duration: TimeInterval = 0.1) {
-        fadeTimer?.invalidate()
-        
+        let id = ObjectIdentifier(player)
+        fadeTimers[id]?.invalidate()
+
         let steps = 10
         let stepDuration = duration / Double(steps)
         let volumeStep = targetVolume / Float(steps)
         var currentStep = 0
-        
+
         player.volume = 0
-        
-        fadeTimer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { timer in
+
+        let timer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { [weak self] timer in
             currentStep += 1
             player.volume = volumeStep * Float(currentStep)
-            
+
             if currentStep >= steps {
                 timer.invalidate()
                 player.volume = targetVolume
+                self?.fadeTimers[id] = nil
             }
         }
+        fadeTimers[id] = timer
     }
     
-    /// 淡出效果
+    /// 淡出效果（独立定时器，避免互相打断）
     private func fadeOut(player: AVAudioPlayer, duration: TimeInterval = 0.1, completion: @escaping () -> Void) {
-        fadeTimer?.invalidate()
-        
+        let id = ObjectIdentifier(player)
+        fadeTimers[id]?.invalidate()
+
         let steps = 10
         let stepDuration = duration / Double(steps)
         let startVolume = player.volume
         let volumeStep = startVolume / Float(steps)
         var currentStep = steps
-        
-        fadeTimer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { timer in
+
+        let timer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { [weak self] timer in
             currentStep -= 1
             player.volume = volumeStep * Float(currentStep)
-            
+
             if currentStep <= 0 {
                 timer.invalidate()
                 player.volume = 0
+                self?.fadeTimers[id] = nil
                 completion()
             }
         }
+        fadeTimers[id] = timer
     }
 }
 
