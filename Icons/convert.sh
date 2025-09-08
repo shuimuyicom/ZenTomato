@@ -13,12 +13,7 @@ if ! command -v magick &> /dev/null; then
 fi
 
 CONVERT="magick -verbose -background none"
-
-# 依据 Big Sur 风格的连续圆角视觉等效半径比例
-# 说明：过去脚本使用 0.2237 并向下取整，
-# 在小尺寸(16/32)上会导致圆角略小，产生“可视面积更大 → 视觉更大”的错觉。
-# 调整为 0.224 并采用四舍五入，同时保证像素对齐，缓解该问题。
-RADIUS_RATIO=0.224
+## 简化策略：仅进行尺寸裁切(缩放到目标尺寸)，不再应用圆角蒙版或内缩。
 
 # 创建必要的目录
 mkdir -p ${APPICON_ICONSET}
@@ -45,11 +40,6 @@ check_source_files() {
     fi
 }
 
-# 四舍五入到整数
-round_to_int() {
-    awk 'BEGIN { x = ARGV[1]; printf "%d", (x < 0 ? int(x - 0.5) : int(x + 0.5)) }' "$1"
-}
-
 # 校验输出 PNG 尺寸是否与目标一致
 validate_png_size() {
     local FILE=$1
@@ -61,28 +51,11 @@ validate_png_size() {
     fi
 }
 
-# 生成带圆角的图标（遵循比例：radius = size * RADIUS_RATIO，四舍五入）
-# 说明：macOS 不会自动为 App 图标加圆角，因此在素材层面应用圆角蒙版。
-# 为避免边缘锯齿和视觉放大，采用 1px 内缩蒙版边界（inset），并对小尺寸强制最小半径。
-render_appicon_with_rounded_corners() {
+# 生成应用图标（仅尺寸裁切/缩放）
+render_appicon_plain() {
     local SIZE=$1
     local DEST=$2
-    # 直接在 awk 中完成乘法与四舍五入，避免 printf 引号转义问题
-    local RADIUS=$(awk -v s="${SIZE}" -v r="${RADIUS_RATIO}" 'BEGIN { v = s*r; printf "%d", (v < 0 ? int(v - 0.5) : int(v + 0.5)) }')
-    # 小尺寸下保证至少 4px 圆角（16px 尺寸吻合 Big Sur 观感）
-    if [ "$SIZE" -le 16 ] && [ "$RADIUS" -lt 4 ]; then
-        RADIUS=4
-    fi
-    # 1px 内缩，避免贴边导致的视觉放大。大尺寸不会受影响。
-    local INSET=1
-    local MAX=$((SIZE - 1 - INSET))
-
-    ${CONVERT} ${APPICON_SRC} -filter Mitchell -define filter:blur=0.9 \
-        -resize "!${SIZE}x${SIZE}" +repage -alpha set \
-        \( -size ${SIZE}x${SIZE} xc:none -fill white \
-           -draw "roundrectangle ${INSET},${INSET} ${MAX},${MAX} ${RADIUS},${RADIUS}" \) \
-        -compose CopyOpacity -composite -strip ${DEST}
-
+    ${CONVERT} ${APPICON_SRC} -resize "!${SIZE}x${SIZE}" +repage -strip ${DEST}
     validate_png_size "${DEST}" "${SIZE}" "${SIZE}"
 }
 
@@ -90,16 +63,16 @@ render_appicon_with_rounded_corners() {
 generate_appicon() {
     echo "正在生成应用图标..."
     check_source_files
-    render_appicon_with_rounded_corners 16   ${APPICON_ICONSET}/icon_16x16.png
-    render_appicon_with_rounded_corners 32   ${APPICON_ICONSET}/icon_16x16@2x.png
-    render_appicon_with_rounded_corners 32   ${APPICON_ICONSET}/icon_32x32.png
-    render_appicon_with_rounded_corners 64   ${APPICON_ICONSET}/icon_32x32@2x.png
-    render_appicon_with_rounded_corners 128  ${APPICON_ICONSET}/icon_128x128.png
-    render_appicon_with_rounded_corners 256  ${APPICON_ICONSET}/icon_128x128@2x.png
-    render_appicon_with_rounded_corners 256  ${APPICON_ICONSET}/icon_256x256.png
-    render_appicon_with_rounded_corners 512  ${APPICON_ICONSET}/icon_256x256@2x.png
-    render_appicon_with_rounded_corners 512  ${APPICON_ICONSET}/icon_512x512.png
-    render_appicon_with_rounded_corners 1024 ${APPICON_ICONSET}/icon_512x512@2x.png
+    render_appicon_plain 16   ${APPICON_ICONSET}/icon_16x16.png
+    render_appicon_plain 32   ${APPICON_ICONSET}/icon_16x16@2x.png
+    render_appicon_plain 32   ${APPICON_ICONSET}/icon_32x32.png
+    render_appicon_plain 64   ${APPICON_ICONSET}/icon_32x32@2x.png
+    render_appicon_plain 128  ${APPICON_ICONSET}/icon_128x128.png
+    render_appicon_plain 256  ${APPICON_ICONSET}/icon_128x128@2x.png
+    render_appicon_plain 256  ${APPICON_ICONSET}/icon_256x256.png
+    render_appicon_plain 512  ${APPICON_ICONSET}/icon_256x256@2x.png
+    render_appicon_plain 512  ${APPICON_ICONSET}/icon_512x512.png
+    render_appicon_plain 1024 ${APPICON_ICONSET}/icon_512x512@2x.png
     echo "应用图标生成完成！"
 }
 
