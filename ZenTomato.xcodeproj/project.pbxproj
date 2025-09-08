@@ -169,11 +169,12 @@
 				};
 			};
 			buildConfigurationList = 08D10D892E4C7567004C44CE /* Build configuration list for PBXProject "ZenTomato" */;
-			developmentRegion = en;
+			developmentRegion = "zh-Hans";
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 08D10D852E4C7567004C44CE;
 			minimizedProjectReferenceProxies = 1;
