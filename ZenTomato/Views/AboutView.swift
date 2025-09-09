@@ -19,9 +19,22 @@ struct AboutView: View {
         return "Version \(version) (\(build))"
     }
     
-    /// 应用名称
+    /// 应用名称（优先读取本地化的 CFBundleDisplayName，其次 CFBundleName，最终回退可执行名）
     private var appName: String {
-        Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String ?? "ZenTomato"
+        let localizedInfo = Bundle.main.localizedInfoDictionary
+        if let name = localizedInfo?["CFBundleDisplayName"] as? String, !name.isEmpty {
+            return name
+        }
+        if let name = localizedInfo?["CFBundleName"] as? String, !name.isEmpty {
+            return name
+        }
+        if let name = Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String, !name.isEmpty {
+            return name
+        }
+        if let name = Bundle.main.infoDictionary?["CFBundleName"] as? String, !name.isEmpty {
+            return name
+        }
+        return ProcessInfo.processInfo.processName
     }
     
     // MARK: - Body
@@ -111,8 +124,8 @@ struct AboutView: View {
             appIconView
                 .padding(.bottom, 18) // 图标与主标题：较大间距
 
-            // 主标题
-            Text("禅番茄")
+            // 主标题（使用本地化应用名）
+            Text(appName)
                 .font(.system(size: 26, weight: .medium))
                 .foregroundColor(Color.zenAccent)
 

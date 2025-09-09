@@ -61,6 +61,23 @@ struct MainView: View {
     
     /// 界面过渡动画
     @Namespace private var tabAnimation
+    /// 本地化的应用名称
+    private var localizedAppName: String {
+        let localizedInfo = Bundle.main.localizedInfoDictionary
+        if let name = localizedInfo?["CFBundleDisplayName"] as? String, !name.isEmpty {
+            return name
+        }
+        if let name = localizedInfo?["CFBundleName"] as? String, !name.isEmpty {
+            return name
+        }
+        if let name = Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String, !name.isEmpty {
+            return name
+        }
+        if let name = Bundle.main.infoDictionary?["CFBundleName"] as? String, !name.isEmpty {
+            return name
+        }
+        return ProcessInfo.processInfo.processName
+    }
     
     /// 主按钮按下状态
     @State private var isMainButtonPressed = false
@@ -126,7 +143,7 @@ struct MainView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("禅番茄")
+                    Text(localizedAppName)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(Color.zenTextGray)
                     

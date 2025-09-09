@@ -1,0 +1,5 @@
+/* Localized Info.plist keys - App display name and bundle name */
+"CFBundleDisplayName" = "ZenTomato";
+"CFBundleName" = "ZenTomato";
+
+

@@ -82,8 +82,17 @@ class AboutWindowManager: NSObject, ObservableObject {
             defer: false
         )
 
-        // 配置窗口属性
-        aboutWindow?.title = "关于 禅番茄"
+        // 配置窗口属性（窗口标题使用本地化应用名）
+        let localizedInfo = Bundle.main.localizedInfoDictionary
+        let candidate1 = localizedInfo?["CFBundleDisplayName"] as? String
+        let candidate2 = localizedInfo?["CFBundleName"] as? String
+        let candidate3 = Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String
+        let candidate4 = Bundle.main.infoDictionary?["CFBundleName"] as? String
+        let trimmedCandidates: [String] = [candidate1, candidate2, candidate3, candidate4]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let appName = trimmedCandidates.first ?? ProcessInfo.processInfo.processName
+        aboutWindow?.title = "关于 \(appName)"
         aboutWindow?.contentViewController = hostingController
         aboutWindow?.isReleasedWhenClosed = false
 

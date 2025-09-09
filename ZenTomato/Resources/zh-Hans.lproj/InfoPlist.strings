@@ -1,0 +1,5 @@
+/* 本地化的 Info.plist 键 - 应用显示名称与包名 */
+"CFBundleDisplayName" = "禅番茄";
+"CFBundleName" = "禅番茄";
+
+
