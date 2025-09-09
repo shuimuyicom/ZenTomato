@@ -27,7 +27,7 @@ struct AboutView: View {
     // MARK: - Body
     
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             // 顶部间距，使内容整体下移
             Spacer()
                 .frame(height: 20)
@@ -35,11 +35,13 @@ struct AboutView: View {
             // 顶部应用信息
             appInfoSection
 
-            // 版权声明
+            // 版权声明（与版本信息之间：中等间距）
             copyrightSection
+                .padding(.top, 16)
 
-            // 协议链接区域 - 移至底部，改为小按钮样式
+            // 协议链接区域 - 移至底部，改为小按钮样式（与版权信息之间：较大间距）
             protocolLinksSection
+                .padding(.top, 24)
 
             Spacer()
         }
@@ -104,81 +106,80 @@ struct AboutView: View {
 
     /// 应用信息区域
     private var appInfoSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             // 应用图标 - 使用系统级别的应用图标确保完整显示
             appIconView
-            
-            // 应用名称
-            Text(appName)
-                .font(.system(size: 24, weight: .bold))
+                .padding(.bottom, 18) // 图标与主标题：较大间距
+
+            // 主标题
+            Text("禅番茄")
+                .font(.system(size: 26, weight: .medium))
+                .foregroundColor(Color.zenAccent)
+
+            // 副标题：形成标题组（与主标题紧密）
+            Text("禅意番茄工作法")
+                .font(.system(size: 16, weight: .medium))
                 .foregroundColor(Color.zenTextGray)
-            
-            // 版本信息
+                .padding(.top, 8) // 主标题与副标题：紧密间距
+
+            // 版本信息：与副标题中等间距
             Text(appVersion)
                 .font(.system(size: 14))
                 .foregroundColor(Color.zenSecondaryText)
+                .padding(.top, 12)
         }
     }
     
     /// 协议链接区域 - 更小的按钮样式
     private var protocolLinksSection: some View {
-        HStack(spacing: 12) {
-            // 服务协议小按钮
-            Button(action: openTermsOfService) {
-                HStack(spacing: 4) {
-                    Image(systemName: "doc.text")
-                        .font(.system(size: 10))
-                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
-
-                    Text("服务协议")
-                        .font(.system(size: 10))
-                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.zenCardBackground.opacity(0.5))
-                .cornerRadius(4)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .onHover { isHovered in
-                // 悬停效果可以在这里添加
-            }
-
-            // 隐私协议小按钮
+        HStack(spacing: 8) { // 两个协议链接之间：小间距
+            // 隐私协议放前
             Button(action: openPrivacyPolicy) {
                 HStack(spacing: 4) {
                     Image(systemName: "hand.raised")
-                        .font(.system(size: 10))
-                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
+                        .font(.system(size: 11))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.85))
 
                     Text("隐私协议")
-                        .font(.system(size: 10))
-                        .foregroundColor(Color.zenSecondaryText.opacity(0.8))
+                        .font(.system(size: 11))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.85))
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.zenCardBackground.opacity(0.5))
+                .background(Color.zenCardBackground.opacity(0.55))
                 .cornerRadius(4)
             }
             .buttonStyle(PlainButtonStyle())
-            .onHover { isHovered in
-                // 悬停效果可以在这里添加
+
+            // 服务协议随后
+            Button(action: openTermsOfService) {
+                HStack(spacing: 4) {
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.85))
+
+                    Text("服务协议")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color.zenSecondaryText.opacity(0.85))
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.zenCardBackground.opacity(0.55))
+                .cornerRadius(4)
             }
+            .buttonStyle(PlainButtonStyle())
         }
-        .padding(.top, 12) // 增加顶部间距，让按钮位置更靠下
+        .padding(.top, 22) // 版权信息与协议链接之间：较大间距
     }
     
     /// 版权声明区域
     private var copyrightSection: some View {
-        VStack(spacing: 8) {
-            Text("Copyright © 2025 水木易. All rights reserved. ")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(Color.zenSecondaryText)
-            
-            Text("禅意番茄工作法")
+        VStack(spacing: 6) {
+            Text("Copyright © 2025 水木易. All rights reserved.")
                 .font(.system(size: 12))
-                .foregroundColor(Color.zenSecondaryText.opacity(0.8))
+                .foregroundColor(Color.zenSecondaryText)
         }
+        .padding(.top, 14) // 版本信息与版权信息之间：中等间距
     }
     
     // MARK: - Actions
